@@ -1,0 +1,428 @@
+
+package ejemplo.jflex;
+
+import java_cup.runtime.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.FileReader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.Hashtable;
+import java.util.Collections;
+import compilador.ast.*;
+
+class MiParser;
+
+action code {:
+   
+:};
+
+parser code
+{:
+    SymbolTable tablaSimbolos = new SymbolTable();
+    int strCounter = 0; // Para generar identificadores únicos para strings
+    ArrayList<String> nombres = new ArrayList<>();
+    int str=0;// Para generar identificadores únicos para PP
+    List<Nodo> instruccionesPP = new ArrayList<>();
+    List<Nodo> declaracionesPP = new ArrayList<>();
+    int strAll=0;// Para generar identificadores únicos para All
+    List<Nodo> instruccionesAll = new ArrayList<>();
+    List<Nodo> declaracionesAll = new ArrayList<>();
+    int strAny=0;// Para generar identificadores únicos para Any
+    List<Nodo> declaracionesAny = new ArrayList<>();
+    List<Nodo> instruccionesAny = new ArrayList<>();
+    
+
+    public void syntax_error(Symbol s){
+        System.out.println("Error en la linea "+ (s.left+1)+ " Columna "+ s.right+ ". Valor simbolo '"
+        +s.value+"' . Simbolo n° "+s.sym+ " no reconocido." );
+    }
+
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{
+        System.out.println("Error en la linea "+ (s.left+1)+ " Columna "+ s.right+ ". Valor simbolo '"
+        +s.value+"' . Simbolo n° "+s.sym+ " no reconocido." );
+    }
+
+:};
+
+
+terminal DECLARE_SECTION, ENDDECLARE_SECTION, PROGRAM_SECTION, ENDPROGRAM_SECTION;
+terminal DECLARACION;
+terminal TYPE_INTEGER, TYPE_FLOAT, TYPE_BOOLEAN, TYPE_FLOAT_ARRAY;
+terminal CORCHETE_ABIERTO, CORCHETE_CERRADO;
+terminal LIT_INTEGER, LIT_FLOAT, LIT_BOOLEAN, LIT_STRING, LIT_ARRAY;
+terminal IDENTIFICADOR, COMA, ASIGNACION;
+terminal CONDITION, BACKWARD_CONDITION, THEN, ELSE, ELSE_BACKWARD, END;
+terminal LOOP_WHEN, BACKWARD_LOOP_WHEN, END_LOOP;
+terminal BREAK, CONTINUE;
+terminal OP_SUM, OP_SUB, OP_MUL, OP_DIV;
+terminal OP_IGUAL, OP_NEQ, OP_MA, OP_ME, OP_MAI, OP_MEI, OP_NOT, OP_AND, OP_OR;
+terminal DISPLAY, INPUT_INT, INPUT_FLOAT, INPUT_BOOL, INPUT_ARRAY;
+terminal PAREN_ABIERTO, PAREN_CERRADO;
+terminal ALL, ANY, PROMEDIO_PONDERADO;
+
+non terminal Nodo declaracion;
+non terminal Nodo programa;
+non terminal Nodo instruccion, asignacion, condicional, condicional_simple, instruccion_bucle;
+non terminal List<Nodo> instrucciones, instrucciones_bucle;
+non terminal List<Nodo> declaraciones;
+non terminal Nodo condicional_backward, bucle;
+non terminal Expresion expresion, termino, factor, expresion_logica, expresion_or, expresion_and;
+non terminal Expresion expresion_comparacion, expresion_not, instruccion_entrada, funcion_logica;
+non terminal Nodo instruccion_salida, lista_identificadores;
+non terminal Expresion expresion_display;
+non terminal String tipo_dato, operador;
+non terminal ParDeArrays list_arg;
+non terminal Expresion promedio_ponderado;
+
+
+start with programa;
+
+
+programa ::= DECLARE_SECTION declaraciones:d ENDDECLARE_SECTION 
+             PROGRAM_SECTION instrucciones:i ENDPROGRAM_SECTION
+             {: 
+                System.out.println("REGLA 1: programa -> DECLARE_SECTION declaraciones ENDDECLARE_SECTION  PROGRAM_SECTION instrucciones ENDPROGRAM_SECTION");
+                if(!declaracionesPP.isEmpty()){d.addAll(declaracionesPP);declaracionesPP.clear();}
+                if(!declaracionesAll.isEmpty()){d.addAll(declaracionesAll);declaracionesAll.clear();}
+                if(!declaracionesAny.isEmpty()){d.addAll(declaracionesAny);declaracionesAny.clear();}
+                Programa prog= new Programa(d, i); 
+                RESULT = prog; 
+                tablaSimbolos.mostrarTablaEnGUI();
+               
+             :};
+
+declaraciones ::= declaracion:d declaraciones:ds 
+                {:  System.out.println("REGLA 2: declaraciones -> declaracion declaraciones"); 
+                 List<Nodo> lista = new ArrayList<>();
+                   lista.add(d);
+                   lista.addAll(ds);
+                  RESULT = lista; :}
+                | /* vacío */
+                {: System.out.println("REGLA 2: declaraciones -> declaracion"); RESULT = new ArrayList<>();  :};
+
+declaracion ::= tipo_dato:t DECLARACION lista_identificadores
+                {: System.out.println("REGLA 3.1: declaracion -> tipo");  
+                for (String nombre : nombres) {
+                    if (tablaSimbolos.exists(nombre)) {
+                      throw new Error("Error: Variable '" + nombre + "' ya declarada.");
+                 } else {
+                     tablaSimbolos.add(nombre, t);
+                 }
+                }
+                List<Nodo> nodos = new ArrayList<>();
+                for (String nombre : nombres) {
+                    nodos.add(new DeclaracionVariable(t, nombre));
+                }
+              
+                nombres.clear();
+                RESULT = new DeclaracionMultiple(nodos); :}
+              | TYPE_FLOAT_ARRAY CORCHETE_ABIERTO LIT_INTEGER:size CORCHETE_CERRADO DECLARACION lista_identificadores
+                {: System.out.println("REGLA 3.2: declaracion -> tipo"); 
+                for (String nombre : nombres) {
+                    if (tablaSimbolos.exists(nombre)) {
+                      throw new Error("Error: Variable '" + nombre + "' ya declarada.");
+                 } else {
+                     tablaSimbolos.add(nombre, "float_array"+"["+size+"]");
+                 }
+                }
+                List<Nodo> nodos = new ArrayList<>();
+                for (String nombre : nombres) {
+                    nodos.add(new DeclaracionArray("float_array", nombre, Integer.parseInt(size.toString())));
+                }
+                nombres.clear(); 
+                RESULT = new DeclaracionMultiple(nodos);:};
+
+
+tipo_dato::= TYPE_INTEGER {: RESULT = "integer"; :}
+            |TYPE_BOOLEAN {: RESULT = "bool"; :}
+            |TYPE_FLOAT {: RESULT = "float"; :};
+
+
+lista_identificadores ::= IDENTIFICADOR:id COMA lista_identificadores:resto
+                         {: System.out.printf("REGLA 4: lista_identificadores: identificador ->%s%n", id); 
+                        nombres.add(""+id); :}
+                       |IDENTIFICADOR:id
+                         {: System.out.printf("REGLA 4: lista_identificadores: identificador ->%s%n", id); 
+                        nombres.add(""+id);:};
+
+
+instrucciones ::= instrucciones:is instruccion:i
+                {: System.out.println("REGLA 5: instrucciones -> instruccion instrucciones"); 
+                 if(!instruccionesPP.isEmpty()){is.addAll(instruccionesPP);instruccionesPP.clear();} 
+                 if(!instruccionesAll.isEmpty()){is.addAll(instruccionesAll);instruccionesAll.clear();} 
+                 if(!instruccionesAny.isEmpty()){is.addAll(instruccionesAny);instruccionesAny.clear();} 
+                  is.add(i);                              
+                  RESULT = is; :}
+               | instruccion:i
+                {: 
+                    List<Nodo> lista = new ArrayList<>();
+                    if(!instruccionesPP.isEmpty()){lista.addAll(instruccionesPP);instruccionesPP.clear();}
+                    if(!instruccionesAll.isEmpty()){lista.addAll(instruccionesAll);instruccionesAll.clear();}
+                    if(!instruccionesAny.isEmpty()){lista.addAll(instruccionesAny);instruccionesAny.clear();} 
+                    lista.add(i);                   
+                    RESULT = lista; 
+                :};
+instruccion ::= asignacion:a {:System.out.println("REGLA 6.1: instruccion -> asignacion"); RESULT = a; :}
+              | condicional:c {:System.out.println("REGLA 6.2: instruccion -> condicional"); RESULT = c; :}
+              | bucle:b       {:System.out.println("REGLA 6.3: instruccion -> bucle "); RESULT = b; :}
+              | instruccion_salida:io {:System.out.println("REGLA 6.4: instruccion -> entrada_salida"); RESULT = io; :};
+              
+
+asignacion ::= IDENTIFICADOR:id ASIGNACION expresion_logica:e
+             {: System.out.println("REGLA 7: asignacion -> IDENTIFICADOR ASIGNACION expresion"); 
+                String tipoVar = tablaSimbolos.getTipo(id.toString());
+                ValidarTipos.verificarDeclaracion(id.toString(), tablaSimbolos);
+                String tipoExpr = e.getTipo();
+                ValidarTipos.verificarDeclaracion(id.toString(), tablaSimbolos); 
+                //Caso verificacion longitud entre arrays 
+                if (tablaSimbolos.getTipo(id.toString()).startsWith("float_array")){
+                    ValidarTipos.validarAsignacionEntreArrays(id, e, tablaSimbolos);
+                }else{
+                    ValidarTipos.validarAsignacion(tipoVar, tipoExpr, id.toString()); }
+                RESULT = new Asignacion(new Identificador(id.toString()), e); :}
+               |IDENTIFICADOR:id CORCHETE_ABIERTO expresion:e CORCHETE_CERRADO ASIGNACION expresion:e1{:
+                System.out.println("REGLA 7.1: asignacion -> IDENTIFICADOR CORCHETE_ABIERTO expresion CORCHETE_CERRADO ASIGNACION expresion"); 
+                String tipoVar = tablaSimbolos.getTipo(id.toString());
+                String tipoExpr = e1.getTipo();
+                ValidarTipos.verificarDeclaracion(id.toString(), tablaSimbolos);
+                ValidarTipos.validarAsignacionArray(tipoVar, tipoExpr, id.toString());
+                RESULT = new AsignacionArray(new Identificador(id.toString()), e, e1); :};
+
+
+
+condicional ::= condicional_simple:s {:System.out.println("REGLA 11.1: condicional_simple"); RESULT = s; :}
+              | condicional_backward:b {:System.out.println("REGLA 11.2: condicional_backward"); RESULT = b; :};
+
+
+condicional_simple ::= CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i END {:
+                    System.out.println("REGLA 12.1: condicional_simple-> CONDITION (exoresion) THEN instrucciones END");
+                    ValidarTipos.verificarCondicion(exp);
+                    RESULT = new ConditionThenElse(exp, i, null); :}
+                    | CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE instrucciones:e END {:
+                    System.out.println("REGLA 12.2: condicional_simple-> CONDITION (expresion_logica) THEN instrucciones ELSE instrucciones END"); 
+                    ValidarTipos.verificarCondicion(exp);
+                    RESULT = new ConditionThenElse(exp, i, e);  :}
+                    | CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE_BACKWARD instrucciones:e END {: 
+                    System.out.println("REGLA 12.3: condicional_simple-> CONDITION (expresion_logica) THEN instrucciones ELSE_BACKWARD instrucciones END");
+                    ValidarTipos.verificarCondicion(exp);
+                    Collections.reverse(e);
+                    RESULT = new ConditionThenElse(exp, i, e); :};
+
+
+condicional_backward ::= BACKWARD_CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i END {:
+                    System.out.println("REGLA 13.1: condicional_backward-> BACKWARD_CONDITION(expresion_logica) THEN instrucciones END"); 
+                    ValidarTipos.verificarCondicion(exp);
+                    Collections.reverse(i);
+                    RESULT = new ConditionThenElse(exp, i, null); :}
+                    | BACKWARD_CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE instrucciones:e END {:
+                    System.out.println("REGLA 13.2: condicional_backward_con_else-> BACKWARD_CONDITION(expresion_logica) THEN instrucciones ELSE instrucciones END"); 
+                    ValidarTipos.verificarCondicion(exp);
+                    Collections.reverse(i);
+                    RESULT = new ConditionThenElse(exp, i, e);  :}
+                    | BACKWARD_CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE_BACKWARD instrucciones:e END {: 
+                    System.out.println("REGLA 13.3: condicional_backward_con_else_backward-> BACKWARD_CONDITION(expresion_logica) THEN instrucciones ELSE_BACKWARD instrucciones END");
+                    ValidarTipos.verificarCondicion(exp);
+                    Collections.reverse(i);
+                    Collections.reverse(e);
+                    RESULT = new ConditionThenElse(exp, i, e); :};
+
+
+bucle ::= LOOP_WHEN PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones_bucle:b END_LOOP {:
+        System.out.println("REGLA 14.1: bucle-> LOOP_WHEN (expresion_logica)THEN instrucciones_bucle END_LOOP");   
+        RESULT = new Bucle(exp, b); :}
+       | BACKWARD_LOOP_WHEN PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones_bucle:b END_LOOP {:
+        System.out.println("REGLA 14.2: bucle-> BACKWARD_LOOP_WHEN (expresion_logica)THEN instrucciones_buble END_LOOP  "); 
+        Collections.reverse(b);
+        RESULT = new Bucle(exp, b); :};
+
+
+instrucciones_bucle ::= instrucciones_bucle:ib instruccion_bucle:i
+               {:System.out.println("REGLA 15.1: intrucciones_bucle-> instruccion_bucle instrucciones_bucle");                  
+                  if(!instruccionesPP.isEmpty()){ib.addAll(instruccionesPP); instruccionesPP.clear();}
+                  if(!instruccionesAll.isEmpty()){ib.addAll(instruccionesAll);instruccionesAll.clear();} 
+                  if(!instruccionesAny.isEmpty()){ib.addAll(instruccionesAny);instruccionesAny.clear();} 
+                  ib.add(i);
+                  RESULT = ib; :}
+               | instruccion_bucle:i
+                {: System.out.println("REGLA 15.2: intrucciones_bucle-> intruccion_bucle"); 
+                    List<Nodo> lista = new ArrayList<>();
+                    if(!instruccionesPP.isEmpty()){lista.addAll(instruccionesPP); instruccionesPP.clear();}
+                    if(!instruccionesAll.isEmpty()){lista.addAll(instruccionesAll);instruccionesAll.clear();} 
+                    if(!instruccionesAny.isEmpty()){lista.addAll(instruccionesAny);instruccionesAny.clear();} 
+                    lista.add(i);
+                    RESULT = lista; 
+                :};
+
+instruccion_bucle ::= asignacion:a {:System.out.println("REGLA 16.1: instruccion_bucle -> asignacion"); RESULT = a; :}
+                    | instruccion_salida:io {:System.out.println("REGLA 16.2: instruccion_bucle -> entrada_salida"); RESULT = io; :}
+                    | condicional:c {:System.out.println("REGLA 16.3: instruccion_bucle -> condition"); RESULT = c;  :}
+                    | bucle:b {:System.out.println("REGLA 16.4: instruccion_bucle -> bucle"); RESULT = b; :}
+                    | BREAK {:System.out.println("REGLA 16.5: instruccion_bucle -> break"); RESULT = new Break(); :}
+                    | CONTINUE {:System.out.println("REGLA 16.6: instruccion_bucle -> continue"); RESULT = new Continue();  :};
+                    
+
+
+instruccion_salida ::= DISPLAY PAREN_ABIERTO expresion_display:exp PAREN_CERRADO
+                     {:System.out.println("REGLA 18: instruccion_salida-> (expresion_display)"); RESULT = new Display(exp); :};
+
+
+expresion_display ::= expresion_logica:l {:System.out.println("REGLA 19.2: expresion_display-> expresion"); RESULT = l; :}
+                    | LIT_STRING:s {:System.out.println("REGLA 19.3: expresion_display-> LIT_STRING"); 
+                    /*tabla de simbolos*/
+                     String id = "__str" + (++strCounter);
+                    if (!tablaSimbolos.exists(id)) {
+                    tablaSimbolos.add(id, ""+s);
+                    } RESULT = new Constante(s); :};
+
+
+expresion_logica ::= expresion_or:s {: System.out.println("REGLA 20: expresion_logica-> expresion_or"); RESULT = s; :};
+
+
+expresion_or ::= expresion_and:ep {: System.out.println("REGLA 21:expresion_and-> expresion_and"); RESULT = ep; :}
+               | expresion_or:izq OP_OR expresion_and:der
+                 {: System.out.println("REGLA 21:expresion_or-> expresion_and"); RESULT = new OperacionOr(izq, der); :};
+
+
+expresion_and ::= expresion_and:izq OP_AND expresion_not:der
+                {: System.out.println("REGLA 21.1: expresion_and-> expresion_and AND expresion_not"); RESULT = new OperacionAnd(izq, der); :}
+                | expresion_not:en {: System.out.println("REGLA 21.2: expresion_and-> expresion_not"); RESULT = en; :};
+
+
+expresion_not ::= OP_NOT expresion_not:e {: System.out.println("REGLA 23.1: expresion_not-> NOT expresion_not"); 
+                    OperacionNot operacionNot= new OperacionNot(e);
+                    ValidarTipos.verificarOperacionNot(operacionNot);
+                    RESULT = operacionNot; :}
+                   | expresion_comparacion:e {:System.out.println("REGLA 23.2: expresion_not-> expresion_comparacion"); RESULT = e; :};
+
+
+expresion_comparacion ::= 
+                       expresion:izq OP_IGUAL expresion:der
+                         {: System.out.println("REGLA 22.1:expresion_comparacion-> expresion == expresion"); 
+                        ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        RESULT = new Igual(izq, der); :}
+                       | expresion:izq OP_NEQ expresion:der
+                         {: System.out.println("REGLA 22.2:expresion_comparacion-> expresion != expresion");
+                        ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        RESULT = new Distinto(izq, der); :}
+                       | expresion:izq OP_MA expresion:der
+                         {: System.out.println("REGLA 22.3:expresion_comparacion->  expresion > expresion"); 
+                        ValidarTipos.verificarOperacionBinaria(izq, der);
+                        RESULT = new Mayor(izq, der); :}
+                       | expresion:izq OP_ME expresion:der
+                         {: System.out.println("REGLA 22.4:expresion_comparacion-> expresion < expresion");
+                        ValidarTipos.verificarOperacionBinaria(izq, der);
+                        RESULT = new Menor(izq, der);  :}
+                       | expresion:izq OP_MAI expresion:der
+                         {: System.out.println("REGLA 22.5:expresion_comparacion-> expresion >= expresion");
+                        ValidarTipos.verificarOperacionBinaria(izq, der);
+                        RESULT = new MayorIgual(izq, der); :}
+                       | expresion:izq OP_MEI expresion:der
+                         {: System.out.println("REGLA 22.6:expresion_comparacion-> expresion <= expresion");
+                        ValidarTipos.verificarOperacionBinaria(izq, der);
+                        RESULT = new MenorIgual(izq, der); :}
+                       |expresion:ep {: System.out.println("REGLA 22.7:expresion_comparacion-> expresion");RESULT = ep; :};
+
+
+
+
+funcion_logica ::= ALL PAREN_ABIERTO operador:op COMA expresion:expr COMA LIT_ARRAY:arr PAREN_CERRADO {: 
+        Identificador resultado= All.crearAllLiteralComoAST(strAll, op, expr, new Constante(arr), declaracionesAll, instruccionesAll, tablaSimbolos); 
+        RESULT = resultado; :}
+   | ALL PAREN_ABIERTO operador:op COMA expresion:expr COMA IDENTIFICADOR:arrid PAREN_CERRADO {:
+        ValidarTipos.verificarDeclaracion(arrid.toString(), tablaSimbolos); 
+        Identificador resultado= All.crearAllComoAST(strAll, op, expr, arrid.toString(), declaracionesAll, instruccionesAll, tablaSimbolos);     
+        RESULT = resultado; :}
+   | ANY PAREN_ABIERTO operador:op COMA expresion:expr COMA LIT_ARRAY:arr PAREN_CERRADO {: 
+        Identificador resultado= Any.crearAnyLiteralComoAST(strAny, op, expr, new Constante(arr), declaracionesAny, instruccionesAny, tablaSimbolos); 
+        RESULT = resultado; :}
+   | ANY PAREN_ABIERTO operador:op COMA expresion:expr COMA IDENTIFICADOR:arrid PAREN_CERRADO {:
+        ValidarTipos.verificarDeclaracion(arrid.toString(), tablaSimbolos);
+        Identificador resultado= Any.crearAnyComoAST(strAny, op, expr, arrid.toString(), declaracionesAny, instruccionesAny, tablaSimbolos);        
+        RESULT = resultado; :};
+
+operador::= OP_IGUAL {: RESULT = "=="; :}
+        |OP_NEQ {: RESULT = "!="; :}
+        |OP_MA {: RESULT = ">"; :}
+        |OP_ME {: RESULT = "<"; :}
+        |OP_MAI {: RESULT = ">="; :}
+        |OP_MEI{: RESULT = "<="; :};
+
+expresion ::= expresion:e1 OP_SUM termino:e2 {:System.out.println("REGLA 8.1: expresion-> expresion + termino"); 
+                        ValidarTipos.verificarOperacionBinaria(e1, e2);
+                        RESULT = new OperacionSuma(e1, e2); :}    
+                       | expresion:e1 OP_SUB termino:e2 {:System.out.println("REGLA 8.2: expresion-> expresion - termino"); 
+                        ValidarTipos.verificarOperacionBinaria(e1, e2);
+                        RESULT = new OperacionResta(e1, e2); :}
+                       | termino:t {:System.out.println("REGLA 8.3: expresion-> termino"); RESULT = t; 
+                        :};
+
+termino ::= termino:t1 OP_MUL factor:f {:System.out.println("REGLA 9.1: termino-> termino * factor"); 
+            ValidarTipos.verificarOperacionBinaria(t1, f);
+            RESULT = new OperacionMultiplicacion(t1, f); :}
+          | termino:t1 OP_DIV factor:f {:System.out.println("REGLA 9.2: termino-> termino / factor"); 
+            ValidarTipos.verificarOperacionBinaria(t1, f);
+            RESULT = new OperacionDivision(t1, f); :}
+          | factor:f {:System.out.println("REGLA 9.3: termino-> factor"); RESULT = f; :};
+
+factor ::= IDENTIFICADOR:id {:System.out.println("REGLA 10.1: factor-> IDENTIFICADOR"); 
+        ValidarTipos.verificarDeclaracion(id.toString(), tablaSimbolos);
+        RESULT = new Identificador(id.toString()); :}
+        | LIT_INTEGER:i {:System.out.println("REGLA 10.2: factor-> LIT_INTIGER"); RESULT = new Constante(i); :}
+        | LIT_FLOAT:f {:System.out.println("REGLA 10.3: factor-> LIT_FLOAT"); RESULT = new Constante(f); :}
+        | PAREN_ABIERTO expresion_logica:e PAREN_CERRADO {:System.out.println("REGLA 10.4: factor-> (factor)"); RESULT = e; :}
+        | OP_SUB factor:f {:System.out.println("REGLA 10.4: factor-> -factor"); 
+        Negativo negativo = new Negativo(f);
+        ValidarTipos.verificarNegativo(negativo);  
+        RESULT = negativo; :}
+        | LIT_BOOLEAN:f {:System.out.println("REGLA 10.5: factor-> LIT_BOOLEAN"); RESULT = new Constante(f);:}
+        | funcion_logica:f {:System.out.println("REGLA 10.6: factor-> funcion_logica"); RESULT = f; :}
+        | IDENTIFICADOR:id CORCHETE_ABIERTO LIT_INTEGER:f CORCHETE_CERRADO {:System.out.println("REGLA 10.8: factor-> IDENTIFICADOR[LIT_INTEGER]"); 
+        ValidarTipos.verificarDeclaracion(id.toString(), tablaSimbolos);    
+        RESULT = new AccesoArray(new Identificador(id.toString()), new Constante(f));  :}
+        |LIT_ARRAY:l {:System.out.println("REGLA 10.8: factor-> LIT_ARRAY"); RESULT = new Constante(l); :}
+        | promedio_ponderado:p {:System.out.println("REGLA 10.9: instruccion-> promedio_ponderado"); RESULT = p; :}
+        |instruccion_entrada:ie {:System.out.println("REGLA 10.10: factor-> instruccion_entrada"); RESULT = ie;:};
+
+
+instruccion_entrada ::= INPUT_INT PAREN_ABIERTO PAREN_CERRADO
+                    {:System.out.println("REGLA 11.1:instruccion_entrada-> INPUT_INT()"); RESULT = new InputInt();:}
+                        |INPUT_FLOAT PAREN_ABIERTO PAREN_CERRADO
+                    {:System.out.println("REGLA 11.2: instruccion_entrada-> INPUT_FLOAT()"); RESULT = new InputFloat(); :}
+                        |INPUT_BOOL PAREN_ABIERTO PAREN_CERRADO
+                    {:System.out.println("REGLA 11.3: instruccion_entrada-> INPUT_BOOL()"); RESULT = new InputBool(); :}
+                        |INPUT_ARRAY PAREN_ABIERTO PAREN_CERRADO
+                    {:System.out.println("REGLA 11.4: instruccion_entrada-> INPUT_ARRAY()"); RESULT = new InputArray(); :};
+
+
+promedio_ponderado ::= PROMEDIO_PONDERADO PAREN_ABIERTO list_arg:la PAREN_CERRADO {:
+                    System.out.println("REGLA 12.1: promedio_ponderado-> IDENTIFICADOR = PROMEDIO_PONDERADO(lis_arg)");
+                    Identificador resultado=PromedioPonderado.crearPPComoAST(str, declaracionesPP, instruccionesPP, tablaSimbolos, la); 
+                    RESULT = resultado;
+                     :};
+
+
+list_arg ::= LIT_ARRAY:l COMA LIT_ARRAY:li {:
+            System.out.println("REGLA 13.1: list_arg-> LIT_ARRAY COMA LIT_ARRAY");  
+            Expresion valores = new Constante(l);
+            Expresion pesos = new Constante(li);
+            RESULT = new ParDeArrays(valores, pesos,str);:}
+            |  IDENTIFICADOR:id COMA LIT_ARRAY:li {:
+            System.out.println("REGLA 13.2: list_arg-> IDENTIFICADOR COMA LIT_ARRAY");
+            Expresion valores = new Identificador(id.toString());
+            Expresion pesos = new Constante(li);
+            RESULT = new ParDeArrays(valores, pesos,str); :}
+            |  LIT_ARRAY:li COMA IDENTIFICADOR:id {:
+            System.out.println("REGLA 13.3: list_arg-> LIT_ARRAY COMA IDENTIFICADOR"); 
+            Expresion valores = new Constante(li);
+            Expresion pesos = new Identificador(id.toString());
+            RESULT = new ParDeArrays(valores, pesos, str); :} 
+            |  IDENTIFICADOR:id COMA IDENTIFICADOR:ide{:
+            System.out.println("REGLA 13.4: list_arg-> IDENTIFICADOR COMA IDENTIFICADOR"); 
+            Expresion valores = new Identificador(id.toString());
+            Expresion pesos = new Identificador(ide.toString());
+            RESULT = new ParDeArrays(valores, pesos, str);  :};
+
+
+
+

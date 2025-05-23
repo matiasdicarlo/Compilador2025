@@ -1,0 +1,516 @@
+
+$Prueba Operaciones Aritmeticas y Relacionales
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+   float_array[5] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   mi_arreglo[0] := x + y
+   
+   resultado := (a + b * c) / x
+   DISPLAY("Valor de la variable resultado:")
+   DISPLAY(resultado)  
+   a := a + 1
+   DISPLAY("Valor de la variable a:")
+   DISPLAY(a)
+   DISPLAY("mi_arreglo[0]:")
+   DISPLAY(mi_arreglo[0])
+   
+   es_igual := resultado == 10
+   mayor := x > y and not es_igual
+    
+
+ENDPROGRAM.SECTION
+
+(*Resultado esperado:
+Valor de la variable resultado:
+1.707317
+Valor de la variable a:
+6
+mi_arreglo[0]:
+17.300000
+*)
+
+
+
+--------------------------------------
+
+
+
+
+$Prueba Loop
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+   float_array[5] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   mi_arreglo[0] := x + y
+
+
+   (* Ciclo LOOP *)
+   LOOP WHEN (a < c) THEN
+      DISPLAY("Iterando en el ciclo LOOP")
+      DISPLAY(a)
+      a := a + 1
+   END_LOOP
+
+ENDPROGRAM.SECTION
+
+
+
+(* Resultado Esperado: 
+Iterando en el ciclo LOOP
+5
+Iterando en el ciclo LOOP
+6
+Iterando en el ciclo LOOP
+7
+Iterando en el ciclo LOOP
+8
+Iterando en el ciclo LOOP
+9
+*)
+
+---------------------------------
+
+
+
+$Prueba Backward-Loop
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+   float_array[5] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   mi_arreglo[0] := x + y
+
+
+   (* Ciclo LOOP *)
+   BACKWARD_LOOP WHEN (a < c) THEN
+      DISPLAY("Iterando en el ciclo BACKWARD_LOOP")
+      DISPLAY(a)
+      a := a + 1
+   END_LOOP
+
+ENDPROGRAM.SECTION
+
+(* Resultado esperado:
+6
+Iterando en el ciclo BACKWARD_LOOP
+7
+Iterando en el ciclo BACKWARD_LOOP
+8
+Iterando en el ciclo BACKWARD_LOOP
+9
+Iterando en el ciclo BACKWARD_LOOP
+10
+Iterando en el ciclo BACKWARD_LOOP
+*)
+
+
+----------------------------------------
+
+
+$Prueba Condition
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+   float_array[6] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   
+   mayor := x > y 
+
+ (* Sentencia de selección *)
+   CONDITION (mayor == true) THEN
+      DISPLAY("x es mayor que y")
+   ELSE
+      DISPLAY("x no es mayor que y")
+   END
+
+ENDPROGRAM.SECTION
+
+(* Resultado esperado:
+x es mayor que y
+*)
+
+
+
+
+----------------------------------------
+
+
+
+$Prueba Condition Backward
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+   float_array[6] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   
+   mayor := x > y 
+
+ (* Sentencia de selección *)
+   BACKWARD_CONDITION (mayor == true) THEN
+      DISPLAY("x es mayor que y")
+      DISPLAY("El valor de c:")
+      DISPLAY(c)
+      c := c - 1
+   ELSE_BACKWARD
+      DISPLAY("x no es mayor que y")
+      DISPLAY("El valor de a:")
+      DISPLAY(a)
+      a := a + 7
+   END
+
+ENDPROGRAM.SECTION
+
+(* Resultado esperado:
+9
+El valor de c:
+x es mayor que y
+*)
+
+
+---------------------------------------
+
+
+
+$Prueba funcion ALL
+
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+   float_array[5] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   mi_arreglo[0] := x + y
+   
+   mayor := all(>, 5.8, [10.0, 9.2, 6.2])
+   CONDITION (mayor == true)THEN
+        DISPLAY("Todos los elementos son mayores que 5.8:")
+   END
+
+
+ENDPROGRAM.SECTION
+
+
+(* Resultado esperado:
+Todos los elementos son mayores que 5.8:
+*)
+
+
+---------------------------------------
+
+
+$Prueba funcion ANY
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+   float_array[5] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   mi_arreglo[0] := x + y
+   
+   mayor := any(>, 5.8, [10.0, 9.2, 6.2])
+   CONDITION (mayor == true)THEN
+        DISPLAY("Ninguno de los elementos es mayor que 5.8:")
+   END
+
+
+ENDPROGRAM.SECTION
+
+
+(* Resultado esperado:
+Ninguno de los elementos es mayor que 5.8:
+*)
+
+
+---------------------------------------------------
+
+
+
+$Prueba funcion PROMEDIO PONDERADO-tema especial
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado, prom
+   float_array[5] : mi_arreglo
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   resultado:= a+b
+   DISPLAY("El resultado de a+b es: ")
+   DISPLAY(resultado)
+   prom := promedio_ponderado([10.5, 20.4, 30.4], [0.2, 0.3, 0.5])
+   DISPLAY("El resultado del Promedio ponderado entre [10.5, 20.4, 30.4], [0.2, 0.3, 0.5] es: ") 
+   DISPLAY(prom)
+
+ENDPROGRAM.SECTION
+
+
+(* Resultado esperado
+El resultado de a+b es:
+8.000000
+El resultado del Promedio ponderado entre [10.5, 20.4, 30.4], [0.2, 0.3, 0.5] es:
+23.420000 *)
+
+
+----------------------------------------------
+
+$Prueba funcion PROMEDIO PONDERADO- Variantes
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado, prom
+   float_array[3] : mi_arreglo 
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   mi_arreglo:=[10.5, 20.4, 30.4] (*Utilizando como argumento un array declarado antes*)
+   resultado:= a+b
+   DISPLAY("El resultado de a+b es: ")
+   DISPLAY(resultado)
+   prom := promedio_ponderado(mi_arreglo, [0.2, 0.3, 0.5])
+   DISPLAY("El resultado del Promedio ponderado entre mi_arreglo y [0.2, 0.3, 0.5] es: ") 
+   DISPLAY(prom)
+
+ENDPROGRAM.SECTION
+
+(* Resultado esperado 
+El resultado de a+b es:
+8.000000
+El resultado del Promedio ponderado entre mi_arreglo y [0.2, 0.3, 0.5] es:
+23.420000 *)
+
+
+----------------------------------------------------
+
+
+$Prueba funcion PROMEDIO PONDERADO- Variantes 2
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado, prom
+   float_array[3] : mi_arreglo 
+   float_array[3] : mi_arregloPesos 
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+
+   mi_arreglo:=[10.5, 20.4, 30.4] (*Utilizando como argumento dos arrays declarados antes*)
+   mi_arregloPesos := [0.2, 0.3, 0.5]
+
+
+   resultado:= a+b
+   DISPLAY("El resultado de a+b es: ")
+   DISPLAY(resultado)
+   prom := promedio_ponderado(mi_arreglo, mi_arregloPesos)
+   DISPLAY("El resultado del Promedio ponderado entre mi_arreglo y mi_arregloPesos es: ") 
+   DISPLAY(prom)
+
+ENDPROGRAM.SECTION
+
+
+(*Resultado esperado:
+El resultado de a+b es:
+8.000000
+El resultado del Promedio ponderado entre mi_arreglo y mi_arregloPesos es:
+23.420000 *)
+
+
+------------------------------------------------
+
+$Prueba funcion PROMEDIO PONDERADO- Con Prueba de Error Diferentes Longitudes
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado, prom
+   float_array[1] : mi_arreglo 
+   float_array[3] : mi_arregloPesos 
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+
+   mi_arreglo:=[10.5] (* Como su longitud es 1, y la de los pesos es 3, debe dar resultado=0.0 por enunciado*)
+   mi_arregloPesos := [0.2, 0.3, 0.5]
+
+
+   resultado:= a+b
+   DISPLAY("El resultado de a+b es: ")
+   DISPLAY(resultado)
+   prom := promedio_ponderado(mi_arreglo, mi_arregloPesos)
+   DISPLAY("El resultado del Promedio ponderado entre mi_arreglo y mi_arregloPesos -CON ERROR DEBE SER 0.0- es: ") 
+   DISPLAY(prom)
+
+ENDPROGRAM.SECTION
+
+(*Resultado Esperado:
+El resultado de a+b es:
+8.000000
+El resultado del Promedio ponderado entre mi_arreglo y mi_arregloPesos -CON ERROR DEBE SER 0.0- es:
+0.000000 *)
+
+
+--------------------------------------------------
+
+$Prueba funcion PROMEDIO PONDERADO- Con Prueba de Error Suma pesos diferente de 1
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado, prom
+   float_array[3] : mi_arreglo 
+   float_array[3] : mi_arregloPesos 
+   boolean : es_igual, mayor
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+
+   mi_arreglo:=[10.5, 5.5, 6.8 ] 
+   mi_arregloPesos := [0.1, 0.3, 0.5 ] (* Como la suma de los pesos no es 1, debe dar resultado=0.0 por enunciado*)
+
+
+   resultado:= a+b
+   DISPLAY("El resultado de a+b es: ")
+   DISPLAY(resultado)
+   prom := promedio_ponderado(mi_arreglo, mi_arregloPesos)
+   DISPLAY("El resultado del Promedio ponderado entre mi_arreglo y mi_arregloPesos -CON ERROR DEBE SER 0.0- es: ") 
+   DISPLAY(prom)
+
+ENDPROGRAM.SECTION
+
+(*Resultado Esperado:
+El resultado de a+b es:
+8.000000
+El resultado del Promedio ponderado entre mi_arreglo y mi_arregloPesos -CON ERROR DEBE SER 0.0- es:
+0.000000*)
+
+---------------------------------------------------------------
+
+
+$Prueba instruccion INPUT_INT
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+
+   DISPLAY("Ingrese el valor de c desde input_int: ")
+   c:=INPUT_INT()
+   resultado:= a+b+c
+   DISPLAY("El resultado de a+b+c con c desde input_int es: ")
+   DISPLAY(resultado)
+  
+
+ENDPROGRAM.SECTION
+
+(*Resultado Esperado:
+Ingrese el valor de c desde input_int:
+Si se ingresa el valor 1:   
+El resultado de a+b+c con c desde input_int es:
+9.000000 *)
+
+-----------------------------------------------
+
