@@ -19,11 +19,11 @@ public class Identificador extends Expresion{
     
     @Override
     public String getEtiqueta() {
-        return nombre;
+        return nombre +": "+ this.getTipo();
     }
     
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         return super.graficar(idPadre);
     }
 
@@ -34,13 +34,12 @@ public class Identificador extends Expresion{
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
-     
-     
+       
     
     public String getTipo() {
         return SymbolTable.getTipo(nombre); // "integer", "float", "bool"
     }
-
+    
     @Override
     public String generarCodigoLLVM(ContextoLLVM ctx) {
         String tipo = getTipo(); // de la tabla de simbolos

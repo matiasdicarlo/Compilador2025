@@ -6,6 +6,8 @@ package compilador.ast;
 
 import ejemplo.jflex.SymbolTable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -17,7 +19,7 @@ public class Any {
 
     public static Identificador crearAnyComoAST(int str, String operador, Expresion valorComparacion, String arreglo, List<Nodo> declaraciones, List<Nodo> instruccionesAny, SymbolTable table) {
            // Variables auxiliares
-        str=str+1;
+
         Identificador varI = new Identificador("_iAny_"+str);
         
         List<Nodo> nodosBool= new ArrayList();
@@ -50,7 +52,7 @@ public class Any {
         
         // 4. condicionLocal := arreglo[i] OP valorComparacion
         Identificador idArreglo= new Identificador(arreglo);
-        Identificador indice= new Identificador(varI.getEtiqueta().toString());
+        Identificador indice= new Identificador(varI.getNombre().toString());
         Expresion accesoElemento = new AccesoArray(idArreglo, indice);
         Expresion comparacion;
         switch (operador) {
@@ -67,25 +69,25 @@ public class Any {
         
         // 5. IF condicionLocal == false THEN { res := false; BREAK }
         Identificador res=new Identificador("_resultadoAny_"+str);
-        Identificador condicionLocal= new Identificador(varCond.getEtiqueta().toString());
+        Identificador condicionLocal= new Identificador(varCond.getNombre().toString());
         Expresion condNegada = new Igual(condicionLocal, new Constante(true));
-        List<Nodo> cuerpoThen = List.of(
+        List<Nodo> cuerpoThen = Collections.unmodifiableList(Arrays.asList(
                 new Asignacion(res, new Constante(true)),
                 new Break()
-        );
+        ));
         ConditionThenElse condicionCorte = new ConditionThenElse(condNegada, cuerpoThen, null);
         
         
         // 6. i := i + 1
-        Identificador indiceRectificado= new Identificador(varI.getEtiqueta().toString());
-        Identificador indiceSumado= new Identificador(varI.getEtiqueta().toString());
+        Identificador indiceRectificado= new Identificador(varI.getNombre().toString());
+        Identificador indiceSumado= new Identificador(varI.getNombre().toString());
         Asignacion incremento = new Asignacion(indiceRectificado, new OperacionSuma(indiceSumado, new Constante(1)));
         
         // 7. BUCLE
-        Identificador varLongitudBucle= new Identificador(varLongitud.getEtiqueta().toString());
-        Identificador varIndiceBucle= new Identificador(varI.getEtiqueta().toString());
+        Identificador varLongitudBucle= new Identificador(varLongitud.getNombre().toString());
+        Identificador varIndiceBucle= new Identificador(varI.getNombre().toString());
         Expresion condicionBucle = new Menor(varIndiceBucle, varLongitudBucle);
-        List<Nodo> cuerpoBucle = List.of(asignarCond, condicionCorte, incremento);
+        List<Nodo> cuerpoBucle = Collections.unmodifiableList(Arrays.asList(asignarCond, condicionCorte, incremento));
         Bucle bucle = new Bucle(condicionBucle, cuerpoBucle);
         instrucciones.add(bucle);
         // 8. Retornar todo 

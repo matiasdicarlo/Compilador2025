@@ -60,7 +60,8 @@ public class ContextoLLVM {
             .append(longitud).append(" x i8] c\"").append(texto).append("\\00\"\n");
             }
         return sb.toString();
-    }   
+    }  
+    
     public String registrarFormato(String formatoTexto, String nombreBase) {
         if (!formatosRegistrados.containsKey(formatoTexto)) {
             String nombre = nombreBase + formatosRegistrados.size();

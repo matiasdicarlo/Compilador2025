@@ -31,7 +31,7 @@ public abstract class Nodo {
         return name.substring(pos);
     }
     
-    protected String graficar(String idPadre){
+    public String graficar(String idPadre){
         StringBuilder grafico = new StringBuilder();
         grafico.append(String.format("%1$s[label=\"%2$s\"]\n", this.getId(), this.getEtiqueta()));
         if(idPadre != null)
@@ -39,9 +39,7 @@ public abstract class Nodo {
         return grafico.toString();
     } 
     
-      public abstract String generarCodigoLLVM(ContextoLLVM ctx);
+    public abstract String generarCodigoLLVM(ContextoLLVM ctx);
       
-      
-    
 
 }

@@ -4,6 +4,8 @@
  */
 package compilador.ast;
 
+import ejemplo.jflex.SymbolTable;
+
 /**
  *
  * @author Usuario
@@ -35,18 +37,17 @@ public class AsignacionArray extends Nodo {
        
     @Override
     public String getEtiqueta() {
-        return ":= "; 
+        return "["+indice.getValor()+"] := "; 
     }
 
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         final String miId = this.getId();
         StringBuilder builder = new StringBuilder();
         builder.append(super.graficar(idPadre));
         // para el arreglo
         builder.append(arreglo.graficar(miId));
-        // para el índice
-        builder.append(indice.graficar(miId));
+        
         // para el valor a asignar
         builder.append(valor.graficar(miId));
             return builder.toString();
@@ -69,7 +70,8 @@ public class AsignacionArray extends Nodo {
             sb.append(convertido).append(" = sitofp i32 ").append(tmpVal).append(" to double\n");
             tmpVal = convertido;
         }
-        sb.append(ptr).append(" = getelementptr inbounds [100 x double], [100 x double]* %")
+        int longitud =SymbolTable.getIndice(arreglo.getNombre());
+        sb.append(ptr).append(" = getelementptr inbounds ["+longitud+" x double], ["+longitud+"x double]* %")
         .append(nombre).append(", i32 0, i32 ").append(tmpIdx).append("\n");
         sb.append("store double ").append(tmpVal).append(", double* ").append(ptr);
 

@@ -15,7 +15,7 @@ public class Continue extends Nodo {
         return "CONTINUE"; 
     }
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         return super.graficar(idPadre);
     }
     

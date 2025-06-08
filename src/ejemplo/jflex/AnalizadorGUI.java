@@ -23,11 +23,6 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java_cup.runtime.Symbol;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 /**
  *
@@ -259,18 +254,20 @@ public class AnalizadorGUI extends javax.swing.JFrame {
             Files.write(Paths.get("programa.ll"), codigoLLVM.getBytes());
             System.out.println("Archivo programa.ll creado.");
             System.out.println(new File("programa.ll").getAbsolutePath());
-            GestorStringsLLVM.reset();
-        
+            GestorStringsLLVM.reset();            
+            ProcessBuilder pb = new ProcessBuilder("clang", "programa.ll", "scanf.ll", "leer_array.ll", "-o", "programa.exe"); 
+            Process processClang = pb.start();
+            processClang.waitFor();
+            System.out.println("Archivo programa.exe creado.");
+            System.out.println(new File("programa.exe").getAbsolutePath());
+            System.out.println("...............................");
+            System.out.println("✅Compilación finalizada.");
         } catch (IOException ex) {
             Logger.getLogger(AnalizadorGUI.class.getName()).log(Level.SEVERE, null, ex);
         }  catch (Exception ex) {
                Logger.getLogger(AnalizadorGUI.class.getName()).log(Level.SEVERE, null, ex);
                System.out.println(ex);
-           }
-        System.out.println("...............................");
-
-
-         }).start();
+        }}).start();
         
     }//GEN-LAST:event_botonGenerarASTMouseClicked
 

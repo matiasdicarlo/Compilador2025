@@ -26,7 +26,7 @@ public class OperacionNot extends Expresion{
     }
     
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         final String miId = this.getId();
         return super.graficar(idPadre) +
                 operando.graficar(miId);       

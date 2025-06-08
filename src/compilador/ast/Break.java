@@ -15,7 +15,7 @@ public class Break extends Nodo {
         return "BREAK"; 
     }
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         return super.graficar(idPadre);
     }
     

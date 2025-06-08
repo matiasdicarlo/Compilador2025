@@ -4,8 +4,7 @@
  */
 package compilador.ast;
 
-import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.List;
 
 /**
@@ -42,7 +41,7 @@ public class ConditionThenElse extends Nodo{
         return  "CONDITION";
     }
     
- @Override
+    @Override
     public String graficar(String idPadre) {
         StringBuilder sb = new StringBuilder();
         String miId = getId();
@@ -82,13 +81,9 @@ public class ConditionThenElse extends Nodo{
         String etiquetaThen = ctx.nuevaEtiqueta("then");
         String etiquetaElse = ctx.nuevaEtiqueta("else");
         String etiquetaFin = ctx.nuevaEtiqueta("ifend");
-
         StringBuilder sb = new StringBuilder();
-        String condCode = condicion.generarCodigoLLVM(ctx);
-        String condTmp = extraerUltimaTemporal(condCode);
-        sb.append(condCode).append("\n");
-        sb.append("br i1 ").append(condTmp).append(", label %").append(etiquetaThen);
-        sb.append(", label %").append(etiquetaElse).append("\n");
+        // Aplicar evaluación condicional con cortocircuito
+        condicion.generarCodigoCondicionalLLVM(ctx, etiquetaThen, etiquetaElse, sb);
         sb.append(etiquetaThen).append(":\n");
         for (Nodo n : cuerpoThen) {
             sb.append(n.generarCodigoLLVM(ctx)).append("\n");
@@ -102,8 +97,11 @@ public class ConditionThenElse extends Nodo{
         }
         sb.append("br label %").append(etiquetaFin).append("\n");
         sb.append(etiquetaFin).append(":\n");
+
         return sb.toString();
     }
+    
+    
     private String extraerUltimaTemporal(String codigo) {
         String[] lines = codigo.split("\\n");
         for (int i = lines.length - 1; i >= 0; i--) {

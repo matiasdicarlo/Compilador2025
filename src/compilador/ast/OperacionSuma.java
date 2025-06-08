@@ -15,12 +15,12 @@ public class OperacionSuma extends OperacionBinaria {
     }
 
     @Override
-    protected String getNombreOperacion() {
+    public String getNombreOperacion() {
         return "+";
     }
 
     @Override
-    protected String operadorLLVM(String tipoOperando) {
+    public String operadorLLVM(String tipoOperando) {
         if (tipoOperando.equals("integer")) {
             return "add";
         } else if (tipoOperando.equals("float")) {

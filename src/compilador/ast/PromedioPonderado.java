@@ -15,8 +15,7 @@ import java.util.List;
 public class PromedioPonderado {
     
     public static Identificador crearPPComoAST(int str, List<Nodo> declaracionesPP, List<Nodo> instruccionesPP, SymbolTable tablaSimbolos, ParDeArrays la) {
-                    str=str+1;
-                    
+ 
                     //Generar declaraciones unicas
                     List<Nodo> nodos=new ArrayList<>();
                     nodos.add(new DeclaracionVariable("float","_suma_valores_"+str));
@@ -52,6 +51,8 @@ public class PromedioPonderado {
                     List<Nodo> instruccionVerificacion= new ArrayList<>();
                     Identificador respuesta= new Identificador("_resultado_"+str);
                     Constante constante= new Constante(0.0);
+                    Display displayDif= new Display(new Constante("Las listas deben tener la misma longitud"));
+                    instruccionVerificacion.add(displayDif);
                     instruccionVerificacion.add(new Asignacion (respuesta, constante));
                     List<Nodo> instruccionElse= new ArrayList<>();
                     ConditionThenElse verificacion= new ConditionThenElse(condicionLongitud, instruccionVerificacion, instruccionElse);
@@ -59,12 +60,12 @@ public class PromedioPonderado {
                     
                     //Aca se resuelve concretamente el PP
                     // Loop_when (__i < length(arrayValores))
-                    Expresion condicion = new Menor(new Identificador(varI.getEtiqueta()), new Constante (new Longitud(arrayValores).evaluar(tablaSimbolos)));
-                    Identificador indiceValorMultiplicando= new Identificador(varI.getEtiqueta().toString());
-                    Identificador indiceValorMultiplicador= new Identificador(varI.getEtiqueta().toString());
+                    Expresion condicion = new Menor(new Identificador(varI.getNombre()), new Constante (new Longitud(arrayValores).evaluar(tablaSimbolos)));
+                    Identificador indiceValorMultiplicando= new Identificador(varI.getNombre().toString());
+                    Identificador indiceValorMultiplicador= new Identificador(varI.getNombre().toString());
                     List<Nodo> cuerpo = new ArrayList<>();
                     arrayValores=la.casteoValores();
-                    if(arrayValores.getEtiqueta().equals("_valores_"+str)){
+                    if(arrayValores.getNombre().equals("_valores_"+str)){
                         List<Nodo> nodosArrays=new ArrayList<>();
                         instruccionesPP.add(new Asignacion(new Identificador("_valores_"+str), (Constante)la.getValores()));
                         Constante longitudArray=(Constante)la.getValores();
@@ -74,7 +75,7 @@ public class PromedioPonderado {
                         declaracionesPP.add(new DeclaracionMultiple(nodosArrays));
                     }
                     arrayPesos=la.casteoPesos();
-                    if(arrayPesos.getEtiqueta().equals("_pesos_"+str)){
+                    if(arrayPesos.getNombre().equals("_pesos_"+str)){
                         List<Nodo> nodosArrays=new ArrayList<>();
                         instruccionesPP.add(new Asignacion(new Identificador("_pesos_"+str), (Constante)(la.getPesos())));
                         Constante longitudArray=(Constante)la.getPesos();
@@ -86,19 +87,19 @@ public class PromedioPonderado {
   
                     // _suma_valores = _suma_valores + arrayValores[_i] * arrayPesos[_i];
                     Expresion multiplicacion = new OperacionMultiplicacion(new AccesoArray((Identificador)arrayValores, indiceValorMultiplicando), new AccesoArray((Identificador)arrayPesos, indiceValorMultiplicador));
-                    Expresion sumaNumerador = new OperacionSuma(new Identificador(varN.getEtiqueta()), multiplicacion);
-                    cuerpo.add(new Asignacion(new Identificador(varN.getEtiqueta()), sumaNumerador));
+                    Expresion sumaNumerador = new OperacionSuma(new Identificador(varN.getNombre()), multiplicacion);
+                    cuerpo.add(new Asignacion(new Identificador(varN.getNombre()), sumaNumerador));
 
                     // _suma_pesos = _suma_pesos + arrayPesos[_i];
-                    Identificador sumaPesos= new Identificador(varD.getEtiqueta().toString());
-                    Identificador indicePesos= new Identificador(varI.getEtiqueta().toString());
+                    Identificador sumaPesos= new Identificador(varD.getNombre().toString());
+                    Identificador indicePesos= new Identificador(varI.getNombre().toString());
                     Expresion arrayPesosDenominador= la.casteoPesos();
                     Expresion sumaDenominador = new OperacionSuma(sumaPesos, new AccesoArray((Identificador)arrayPesosDenominador, indicePesos));
-                    cuerpo.add(new Asignacion(new Identificador(varD.getEtiqueta()), sumaDenominador));
+                    cuerpo.add(new Asignacion(new Identificador(varD.getNombre()), sumaDenominador));
                     
                     //i=i+1; FUNDAMENTAL!
-                    Identificador indicePaso= new Identificador(varI.getEtiqueta().toString());
-                    Identificador indiceSumado= new Identificador(varI.getEtiqueta().toString());
+                    Identificador indicePaso= new Identificador(varI.getNombre().toString());
+                    Identificador indiceSumado= new Identificador(varI.getNombre().toString());
                     Asignacion incremento = new Asignacion(indicePaso, new OperacionSuma(indiceSumado, new Constante(1)));
                     cuerpo.add(incremento);
                     
@@ -106,19 +107,21 @@ public class PromedioPonderado {
                     instruccionElse.add(new Bucle(condicion, cuerpo));
                     
                     //_suma_pesos == 1?
-                    Expresion condicionIgualUno = new Distinto(new Identificador (varD.getEtiqueta()), new Constante (1));
-                    Expresion condicioneslIgualCero= new Igual(new Identificador (varD.getEtiqueta()), new Constante (0));
+                    Expresion condicionIgualUno = new Distinto(new Identificador (varD.getNombre()), new Constante (1));
+                    Expresion condicioneslIgualCero= new Igual(new Identificador (varD.getNombre()), new Constante (0));
                     Expresion operacionOr= new OperacionOr(condicionIgualUno,condicioneslIgualCero);
                     List<Nodo> instruccionesVerifIgualUno= new ArrayList<>();
                     Identificador respuestaIgualUno= new Identificador("_resultado_"+str);
                     Constante constanteIgualUno= new Constante(0.0);
+                    Display display= new Display(new Constante("La suma de los pesos debe dar 1"));
+                    instruccionesVerifIgualUno.add(display);
                     instruccionesVerifIgualUno.add(new Asignacion (respuestaIgualUno, constanteIgualUno));
                     List<Nodo> instruccionElseIgualUno= new ArrayList<>();
                     ConditionThenElse verificacionIgualUno= new ConditionThenElse(operacionOr, instruccionesVerifIgualUno, instruccionElseIgualUno);
                      
                     
                     // _resultado = _suma_valores / _suma_pesos
-                    instruccionElseIgualUno.add(new Asignacion(new Identificador(resultado.getEtiqueta()), new OperacionDivision(new Identificador(varN.getEtiqueta()), new Identificador(varD.getEtiqueta()))));
+                    instruccionElseIgualUno.add(new Asignacion(new Identificador(resultado.getNombre()), new OperacionDivision(new Identificador(varN.getNombre()), new Identificador(varD.getNombre()))));
                     
                     //se agregan ambas verificaciones
                     instruccionesPP.add(verificacion);

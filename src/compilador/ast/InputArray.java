@@ -9,32 +9,47 @@ package compilador.ast;
  * @author Usuario
  */
 public class InputArray extends Expresion {
+    private int longitud;
+    private String ultimaReferenciaLLVM;
+    
+    public InputArray(int tamaño) {
+        this.longitud = tamaño;
+    }
+      
     @Override
     public String getEtiqueta() {
         return "INPUT_ARRAY";
     }
     
 
-@Override
-public String generarCodigoLLVM(ContextoLLVM ctx) {
-    String tmpPtr = ctx.nuevoTemporal();
-    String tmpScan = ctx.nuevoTemporal();
-    String tmpVal = ctx.nuevoTemporal();
+    @Override
+    public String generarCodigoLLVM(ContextoLLVM ctx) {
+        this.ultimaReferenciaLLVM = ctx.nuevoTemporal();
+        StringBuilder sb = new StringBuilder();
+        sb.append(ultimaReferenciaLLVM).append(" = alloca [")
+        .append(longitud).append(" x double]\n");
+        String ptr = ctx.nuevoTemporal();
+        sb.append(ptr).append(" = getelementptr inbounds [")
+        .append(longitud).append(" x double], [").append(longitud)
+        .append(" x double]* ").append(ultimaReferenciaLLVM).append(", i32 0, i32 0\n");
+        String tmpCall = ctx.nuevoTemporal();
+        sb.append(tmpCall).append(" = call i32 @leerArray(double* ").append(ptr)
+        .append(", i32 ").append(longitud).append(")\n");
+        return sb.toString();
+    }
 
-    StringBuilder sb = new StringBuilder();
-    sb.append(tmpPtr).append(" = alloca double\n");
-    sb.append(tmpScan).append(" = call i32 (i8*, ...) @scanf(i8* getelementptr ")
-      .append("([4 x i8], [4 x i8]* @.float, i32 0, i32 0), double* ")
-      .append(tmpPtr).append(")\n");
-    sb.append(tmpVal).append(" = load double, double* ").append(tmpPtr);
+    public String getUltimaReferencia() {
+        return this.ultimaReferenciaLLVM;
+     }
 
-    return sb.toString();
-}
-
+    
+    public int getLongitud() {
+        return this.longitud;
+    }
 
     @Override
     public String getTipo() {
-        return "float";
+        return "float_array";
     }
 
 }

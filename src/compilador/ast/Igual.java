@@ -15,12 +15,12 @@ public class Igual extends OperacionBinaria {
     }
     
     @Override
-    protected String getNombreOperacion() {
+    public String getNombreOperacion() {
         return "==";
     }
     
     @Override
-    protected String operadorLLVM(String tipoOperando) {
+    public String operadorLLVM(String tipoOperando) {
         if (tipoOperando.equals("integer") || tipoOperando.equals("bool")) {
             return "icmp eq";
         } else if (tipoOperando.equals("float")) {

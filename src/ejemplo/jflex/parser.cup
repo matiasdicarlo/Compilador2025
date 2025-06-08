@@ -22,15 +22,13 @@ parser code
     SymbolTable tablaSimbolos = new SymbolTable();
     int strCounter = 0; // Para generar identificadores únicos para strings
     ArrayList<String> nombres = new ArrayList<>();
-    int str=0;// Para generar identificadores únicos para PP
     List<Nodo> instruccionesPP = new ArrayList<>();
     List<Nodo> declaracionesPP = new ArrayList<>();
-    int strAll=0;// Para generar identificadores únicos para All
     List<Nodo> instruccionesAll = new ArrayList<>();
     List<Nodo> declaracionesAll = new ArrayList<>();
-    int strAny=0;// Para generar identificadores únicos para Any
     List<Nodo> declaracionesAny = new ArrayList<>();
     List<Nodo> instruccionesAny = new ArrayList<>();
+    ContextoSTR contextoStr = new ContextoSTR(0); //Para generar identificadores únicos para PP, ALL y ANY
     
 
     public void syntax_error(Symbol s){
@@ -177,16 +175,27 @@ asignacion ::= IDENTIFICADOR:id ASIGNACION expresion_logica:e
                 ValidarTipos.verificarDeclaracion(id.toString(), tablaSimbolos); 
                 //Caso verificacion longitud entre arrays 
                 if (tablaSimbolos.getTipo(id.toString()).startsWith("float_array")){
-                    ValidarTipos.validarAsignacionEntreArrays(id, e, tablaSimbolos);
+                    if (!(e instanceof Identificador)){
+                        ValidarTipos.validarAsignacionEntreArrays(id, e, tablaSimbolos);
+                    }else if(e instanceof Identificador){
+                        ValidarTipos.validarAsignacionEntreArraysNoLiterales(id, e, tablaSimbolos);}
+                    RESULT = new Asignacion(new Identificador(id.toString()), e);
                 }else{
-                    ValidarTipos.validarAsignacion(tipoVar, tipoExpr, id.toString()); }
-                RESULT = new Asignacion(new Identificador(id.toString()), e); :}
+                    String validar=ValidarTipos.validarAsignacion(tipoVar, tipoExpr, id.toString());
+                    Nodo eFinal = e;
+                    if (validar.equals("Conversion")) {
+                        eFinal = new NodoConversion(e); 
+                    }                    
+                    RESULT = new Asignacion(new Identificador(id.toString()), (Expresion) eFinal); 
+                 }
+                 :}
                |IDENTIFICADOR:id CORCHETE_ABIERTO expresion:e CORCHETE_CERRADO ASIGNACION expresion:e1{:
                 System.out.println("REGLA 7.1: asignacion -> IDENTIFICADOR CORCHETE_ABIERTO expresion CORCHETE_CERRADO ASIGNACION expresion"); 
                 String tipoVar = tablaSimbolos.getTipo(id.toString());
+                String tipoIndice= e.getTipo();
                 String tipoExpr = e1.getTipo();
                 ValidarTipos.verificarDeclaracion(id.toString(), tablaSimbolos);
-                ValidarTipos.validarAsignacionArray(tipoVar, tipoExpr, id.toString());
+                ValidarTipos.validarAsignacionArray(tipoVar, tipoExpr, id.toString(), e, tipoIndice);
                 RESULT = new AsignacionArray(new Identificador(id.toString()), e, e1); :};
 
 
@@ -195,32 +204,32 @@ condicional ::= condicional_simple:s {:System.out.println("REGLA 11.1: condicion
               | condicional_backward:b {:System.out.println("REGLA 11.2: condicional_backward"); RESULT = b; :};
 
 
-condicional_simple ::= CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i END {:
+condicional_simple ::= CONDITION expresion_logica:exp THEN instrucciones:i END {:
                     System.out.println("REGLA 12.1: condicional_simple-> CONDITION (exoresion) THEN instrucciones END");
                     ValidarTipos.verificarCondicion(exp);
                     RESULT = new ConditionThenElse(exp, i, null); :}
-                    | CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE instrucciones:e END {:
+                    | CONDITION expresion_logica:exp THEN instrucciones:i ELSE instrucciones:e END {:
                     System.out.println("REGLA 12.2: condicional_simple-> CONDITION (expresion_logica) THEN instrucciones ELSE instrucciones END"); 
                     ValidarTipos.verificarCondicion(exp);
                     RESULT = new ConditionThenElse(exp, i, e);  :}
-                    | CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE_BACKWARD instrucciones:e END {: 
+                    | CONDITION expresion_logica:exp THEN instrucciones:i ELSE_BACKWARD instrucciones:e END {: 
                     System.out.println("REGLA 12.3: condicional_simple-> CONDITION (expresion_logica) THEN instrucciones ELSE_BACKWARD instrucciones END");
                     ValidarTipos.verificarCondicion(exp);
                     Collections.reverse(e);
                     RESULT = new ConditionThenElse(exp, i, e); :};
 
 
-condicional_backward ::= BACKWARD_CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i END {:
+condicional_backward ::= BACKWARD_CONDITION expresion_logica:exp THEN instrucciones:i END {:
                     System.out.println("REGLA 13.1: condicional_backward-> BACKWARD_CONDITION(expresion_logica) THEN instrucciones END"); 
                     ValidarTipos.verificarCondicion(exp);
                     Collections.reverse(i);
                     RESULT = new ConditionThenElse(exp, i, null); :}
-                    | BACKWARD_CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE instrucciones:e END {:
+                    | BACKWARD_CONDITION expresion_logica:exp THEN instrucciones:i ELSE instrucciones:e END {:
                     System.out.println("REGLA 13.2: condicional_backward_con_else-> BACKWARD_CONDITION(expresion_logica) THEN instrucciones ELSE instrucciones END"); 
                     ValidarTipos.verificarCondicion(exp);
                     Collections.reverse(i);
                     RESULT = new ConditionThenElse(exp, i, e);  :}
-                    | BACKWARD_CONDITION PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones:i ELSE_BACKWARD instrucciones:e END {: 
+                    | BACKWARD_CONDITION expresion_logica:exp THEN instrucciones:i ELSE_BACKWARD instrucciones:e END {: 
                     System.out.println("REGLA 13.3: condicional_backward_con_else_backward-> BACKWARD_CONDITION(expresion_logica) THEN instrucciones ELSE_BACKWARD instrucciones END");
                     ValidarTipos.verificarCondicion(exp);
                     Collections.reverse(i);
@@ -228,10 +237,10 @@ condicional_backward ::= BACKWARD_CONDITION PAREN_ABIERTO expresion_logica:exp P
                     RESULT = new ConditionThenElse(exp, i, e); :};
 
 
-bucle ::= LOOP_WHEN PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones_bucle:b END_LOOP {:
+bucle ::= LOOP_WHEN expresion_logica:exp THEN instrucciones_bucle:b END_LOOP {:
         System.out.println("REGLA 14.1: bucle-> LOOP_WHEN (expresion_logica)THEN instrucciones_bucle END_LOOP");   
         RESULT = new Bucle(exp, b); :}
-       | BACKWARD_LOOP_WHEN PAREN_ABIERTO expresion_logica:exp PAREN_CERRADO THEN instrucciones_bucle:b END_LOOP {:
+       | BACKWARD_LOOP_WHEN expresion_logica:exp THEN instrucciones_bucle:b END_LOOP {:
         System.out.println("REGLA 14.2: bucle-> BACKWARD_LOOP_WHEN (expresion_logica)THEN instrucciones_buble END_LOOP  "); 
         Collections.reverse(b);
         RESULT = new Bucle(exp, b); :};
@@ -299,46 +308,82 @@ expresion_not ::= OP_NOT expresion_not:e {: System.out.println("REGLA 23.1: expr
 expresion_comparacion ::= 
                        expresion:izq OP_IGUAL expresion:der
                          {: System.out.println("REGLA 22.1:expresion_comparacion-> expresion == expresion"); 
-                        ValidarTipos.verificarOperacionBinariaLogica(izq, der);
-                        RESULT = new Igual(izq, der); :}
+                        String validar=ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        Igual eq =null;
+                        if (validar.equals("Conversion")){ 
+                                eq= new Igual(izq, new NodoConversion(der));
+                        }else if (validar.equals("Conversion")){
+                                eq= new Igual(new NodoConversion(izq),der); 
+                        }else { eq= new Igual(izq, der);}
+                        RESULT = eq; :}
                        | expresion:izq OP_NEQ expresion:der
                          {: System.out.println("REGLA 22.2:expresion_comparacion-> expresion != expresion");
-                        ValidarTipos.verificarOperacionBinariaLogica(izq, der);
-                        RESULT = new Distinto(izq, der); :}
+                        String validar=ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        Distinto dist =null;
+                        if (validar.equals("Conversion")){ 
+                                dist= new Distinto(izq, new NodoConversion(der));
+                        }else if (validar.equals("Conversion01")){
+                                dist= new Distinto(new NodoConversion(izq),der); 
+                        }else { dist= new Distinto(izq, der);}
+                        RESULT =  dist; :}
                        | expresion:izq OP_MA expresion:der
                          {: System.out.println("REGLA 22.3:expresion_comparacion->  expresion > expresion"); 
-                        ValidarTipos.verificarOperacionBinaria(izq, der);
-                        RESULT = new Mayor(izq, der); :}
+                        String validar=ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        Mayor mayor =null;
+                        if (validar.equals("Conversion")){ 
+                                mayor= new Mayor(izq, new NodoConversion(der));
+                        }else if (validar.equals("Conversion")){
+                                mayor= new Mayor(new NodoConversion(izq),der); 
+                        }else { mayor= new Mayor(izq, der);}
+                        RESULT = mayor; :}
                        | expresion:izq OP_ME expresion:der
                          {: System.out.println("REGLA 22.4:expresion_comparacion-> expresion < expresion");
-                        ValidarTipos.verificarOperacionBinaria(izq, der);
-                        RESULT = new Menor(izq, der);  :}
+                        String validar=ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        Menor menor =null;
+                        if (validar.equals("Conversion")){ 
+                                menor= new Menor(izq, new NodoConversion(der));
+                        }else if (validar.equals("Conversion")){
+                                menor= new Menor(new NodoConversion(izq),der); 
+                        }else { menor= new Menor(izq, der);}
+                        RESULT = menor;  :}
                        | expresion:izq OP_MAI expresion:der
                          {: System.out.println("REGLA 22.5:expresion_comparacion-> expresion >= expresion");
-                        ValidarTipos.verificarOperacionBinaria(izq, der);
-                        RESULT = new MayorIgual(izq, der); :}
+                        String validar=ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        MayorIgual mayor =null;
+                        if (validar.equals("Conversion")){ 
+                                mayor= new MayorIgual(izq, new NodoConversion(der));
+                        }else if (validar.equals("Conversion")){
+                                mayor= new MayorIgual(new NodoConversion(izq),der); 
+                        }else { mayor= new MayorIgual(izq, der);}
+                        RESULT = mayor; :}
                        | expresion:izq OP_MEI expresion:der
                          {: System.out.println("REGLA 22.6:expresion_comparacion-> expresion <= expresion");
-                        ValidarTipos.verificarOperacionBinaria(izq, der);
-                        RESULT = new MenorIgual(izq, der); :}
+                        String validar=ValidarTipos.verificarOperacionBinariaLogica(izq, der);
+                        MenorIgual menor =null;
+                        if (validar.equals("Conversion")){ 
+                                menor= new MenorIgual(izq, new NodoConversion(der));
+                        }else if (validar.equals("Conversion")){
+                                menor= new MenorIgual(new NodoConversion(izq),der);
+                        }else { menor= new MenorIgual(izq, der);}
+                        RESULT = menor; :}
                        |expresion:ep {: System.out.println("REGLA 22.7:expresion_comparacion-> expresion");RESULT = ep; :};
 
 
 
 
-funcion_logica ::= ALL PAREN_ABIERTO operador:op COMA expresion:expr COMA LIT_ARRAY:arr PAREN_CERRADO {: 
-        Identificador resultado= All.crearAllLiteralComoAST(strAll, op, expr, new Constante(arr), declaracionesAll, instruccionesAll, tablaSimbolos); 
+funcion_logica ::= ALL PAREN_ABIERTO operador:op COMA expresion:expr COMA LIT_ARRAY:arr PAREN_CERRADO {:
+        Identificador resultado= All.crearAllLiteralComoAST(contextoStr.getStrYIncrementar(), op, expr, new Constante(arr), declaracionesAll, instruccionesAll, tablaSimbolos); 
         RESULT = resultado; :}
    | ALL PAREN_ABIERTO operador:op COMA expresion:expr COMA IDENTIFICADOR:arrid PAREN_CERRADO {:
         ValidarTipos.verificarDeclaracion(arrid.toString(), tablaSimbolos); 
-        Identificador resultado= All.crearAllComoAST(strAll, op, expr, arrid.toString(), declaracionesAll, instruccionesAll, tablaSimbolos);     
+        Identificador resultado= All.crearAllComoAST(contextoStr.getStrYIncrementar(), op, expr, arrid.toString(), declaracionesAll, instruccionesAll, tablaSimbolos);     
         RESULT = resultado; :}
    | ANY PAREN_ABIERTO operador:op COMA expresion:expr COMA LIT_ARRAY:arr PAREN_CERRADO {: 
-        Identificador resultado= Any.crearAnyLiteralComoAST(strAny, op, expr, new Constante(arr), declaracionesAny, instruccionesAny, tablaSimbolos); 
+        Identificador resultado= Any.crearAnyLiteralComoAST(contextoStr.getStrYIncrementar(), op, expr, new Constante(arr), declaracionesAny, instruccionesAny, tablaSimbolos); 
         RESULT = resultado; :}
    | ANY PAREN_ABIERTO operador:op COMA expresion:expr COMA IDENTIFICADOR:arrid PAREN_CERRADO {:
         ValidarTipos.verificarDeclaracion(arrid.toString(), tablaSimbolos);
-        Identificador resultado= Any.crearAnyComoAST(strAny, op, expr, arrid.toString(), declaracionesAny, instruccionesAny, tablaSimbolos);        
+        Identificador resultado= Any.crearAnyComoAST(contextoStr.getStrYIncrementar(), op, expr, arrid.toString(), declaracionesAny, instruccionesAny, tablaSimbolos);        
         RESULT = resultado; :};
 
 operador::= OP_IGUAL {: RESULT = "=="; :}
@@ -349,20 +394,44 @@ operador::= OP_IGUAL {: RESULT = "=="; :}
         |OP_MEI{: RESULT = "<="; :};
 
 expresion ::= expresion:e1 OP_SUM termino:e2 {:System.out.println("REGLA 8.1: expresion-> expresion + termino"); 
-                        ValidarTipos.verificarOperacionBinaria(e1, e2);
-                        RESULT = new OperacionSuma(e1, e2); :}    
+                        String validar=ValidarTipos.verificarOperacionBinaria(e1, e2);
+                        OperacionSuma suma =null;
+                        if (validar.equals("Conversion")){ 
+                                suma= new OperacionSuma(e1, new NodoConversion(e2));}
+                        if (validar.equals("Conversion")){
+                                suma= new OperacionSuma(new NodoConversion(e1), e2); 
+                        }else { suma= new OperacionSuma(e1, e2);}
+                        RESULT = suma; :}    
                        | expresion:e1 OP_SUB termino:e2 {:System.out.println("REGLA 8.2: expresion-> expresion - termino"); 
-                        ValidarTipos.verificarOperacionBinaria(e1, e2);
-                        RESULT = new OperacionResta(e1, e2); :}
+                        String validar=ValidarTipos.verificarOperacionBinaria(e1, e2);
+                        OperacionResta resta =null;
+                        if (validar.equals("Conversion")){ 
+                               resta= new OperacionResta(e1, new NodoConversion(e2));}
+                        if (validar.equals("Conversion")){
+                                resta= new OperacionResta(new NodoConversion(e1), e2); 
+                        }else { resta= new OperacionResta(e1, e2);}
+                        RESULT = resta; :}
                        | termino:t {:System.out.println("REGLA 8.3: expresion-> termino"); RESULT = t; 
                         :};
 
 termino ::= termino:t1 OP_MUL factor:f {:System.out.println("REGLA 9.1: termino-> termino * factor"); 
-            ValidarTipos.verificarOperacionBinaria(t1, f);
-            RESULT = new OperacionMultiplicacion(t1, f); :}
+            String validar=ValidarTipos.verificarOperacionBinaria(t1, f);
+            OperacionMultiplicacion mult =null;
+                        if (validar.equals("Conversion")){ 
+                                mult= new OperacionMultiplicacion(t1, new NodoConversion(f));}
+                        if (validar.equals("Conversion")){
+                                mult= new OperacionMultiplicacion(new NodoConversion(t1), f); 
+                        }else { mult= new OperacionMultiplicacion(t1, f);}
+            RESULT = mult; :}
           | termino:t1 OP_DIV factor:f {:System.out.println("REGLA 9.2: termino-> termino / factor"); 
-            ValidarTipos.verificarOperacionBinaria(t1, f);
-            RESULT = new OperacionDivision(t1, f); :}
+            String validar=ValidarTipos.verificarOperacionBinaria(t1, f);
+            OperacionDivision div =null;
+                        if (validar.equals("Conversion")){ 
+                                div= new OperacionDivision(t1, new NodoConversion(f));}
+                        if (validar.equals("Conversion")){
+                                div= new OperacionDivision(new NodoConversion(t1), f); 
+                        }else { div= new OperacionDivision(t1, f);}
+            RESULT = div; :}
           | factor:f {:System.out.println("REGLA 9.3: termino-> factor"); RESULT = f; :};
 
 factor ::= IDENTIFICADOR:id {:System.out.println("REGLA 10.1: factor-> IDENTIFICADOR"); 
@@ -391,13 +460,13 @@ instruccion_entrada ::= INPUT_INT PAREN_ABIERTO PAREN_CERRADO
                     {:System.out.println("REGLA 11.2: instruccion_entrada-> INPUT_FLOAT()"); RESULT = new InputFloat(); :}
                         |INPUT_BOOL PAREN_ABIERTO PAREN_CERRADO
                     {:System.out.println("REGLA 11.3: instruccion_entrada-> INPUT_BOOL()"); RESULT = new InputBool(); :}
-                        |INPUT_ARRAY PAREN_ABIERTO PAREN_CERRADO
-                    {:System.out.println("REGLA 11.4: instruccion_entrada-> INPUT_ARRAY()"); RESULT = new InputArray(); :};
+                        |INPUT_ARRAY PAREN_ABIERTO LIT_INTEGER:i PAREN_CERRADO
+                    {:System.out.println("REGLA 11.4: instruccion_entrada-> INPUT_ARRAY()"); RESULT = new InputArray((Integer)i); :};
 
 
 promedio_ponderado ::= PROMEDIO_PONDERADO PAREN_ABIERTO list_arg:la PAREN_CERRADO {:
                     System.out.println("REGLA 12.1: promedio_ponderado-> IDENTIFICADOR = PROMEDIO_PONDERADO(lis_arg)");
-                    Identificador resultado=PromedioPonderado.crearPPComoAST(str, declaracionesPP, instruccionesPP, tablaSimbolos, la); 
+                    Identificador resultado=PromedioPonderado.crearPPComoAST(contextoStr.getStrYIncrementar(), declaracionesPP, instruccionesPP, tablaSimbolos, la); 
                     RESULT = resultado;
                      :};
 
@@ -406,22 +475,22 @@ list_arg ::= LIT_ARRAY:l COMA LIT_ARRAY:li {:
             System.out.println("REGLA 13.1: list_arg-> LIT_ARRAY COMA LIT_ARRAY");  
             Expresion valores = new Constante(l);
             Expresion pesos = new Constante(li);
-            RESULT = new ParDeArrays(valores, pesos,str);:}
+            RESULT = new ParDeArrays(valores, pesos,contextoStr.getStr());:}
             |  IDENTIFICADOR:id COMA LIT_ARRAY:li {:
             System.out.println("REGLA 13.2: list_arg-> IDENTIFICADOR COMA LIT_ARRAY");
             Expresion valores = new Identificador(id.toString());
             Expresion pesos = new Constante(li);
-            RESULT = new ParDeArrays(valores, pesos,str); :}
+            RESULT = new ParDeArrays(valores, pesos,contextoStr.getStr()); :}
             |  LIT_ARRAY:li COMA IDENTIFICADOR:id {:
             System.out.println("REGLA 13.3: list_arg-> LIT_ARRAY COMA IDENTIFICADOR"); 
             Expresion valores = new Constante(li);
             Expresion pesos = new Identificador(id.toString());
-            RESULT = new ParDeArrays(valores, pesos, str); :} 
+            RESULT = new ParDeArrays(valores, pesos,contextoStr.getStr()); :} 
             |  IDENTIFICADOR:id COMA IDENTIFICADOR:ide{:
             System.out.println("REGLA 13.4: list_arg-> IDENTIFICADOR COMA IDENTIFICADOR"); 
             Expresion valores = new Identificador(id.toString());
-            Expresion pesos = new Identificador(ide.toString());
-            RESULT = new ParDeArrays(valores, pesos, str);  :};
+            Expresion pesos = new Identificador(ide.toString());          
+            RESULT = new ParDeArrays(valores, pesos, contextoStr.getStr());  :};
 
 
 

@@ -57,22 +57,22 @@ public class Programa extends Nodo {
         sb.append("declare i32 @puts(i8*)\n");
         sb.append("declare i32 @printf(i8*, ...)\n");    
         sb.append("@.integer = private constant [4 x i8] c\"%d\\0A\\00\"\n");
-        sb.append("@.float = private constant [4 x i8] c\"%f\\0A\\00\"\n");
+        sb.append("@.float = private constant [4 x i8] c\"%f\\0A\\00\"\n");        
+        sb.append("@.true_str = private constant [5 x i8] c\"true\\00\"\n");
+        sb.append("@.false_str = private constant [6 x i8] c\"false\\00\"\n");
         sb.append("declare i32 @scanf(i8*, ...)\n");
         sb.append("@int_read_format = unnamed_addr constant [3 x i8] c\"%d\\00\"\n");
         sb.append("@double_read_format = unnamed_addr constant [4 x i8] c\"%lf\\00\"\n");
+        sb.append("declare i32 @leerArray(double*, i32)");
         sb.append(GestorStringsLLVM.generarDefiniciones());
         sb.append("define i32 @main() {\n");
-        
-
+      
         for (Nodo dec : declaraciones) {
             sb.append("  ").append(dec.generarCodigoLLVM(ctx)).append("\n");
         }
-
         for (Nodo stmt : instrucciones) {
             sb.append("  ").append(stmt.generarCodigoLLVM(ctx)).append("\n");
         }
-
         sb.append("  ret i32 0\n");
         sb.append("}\n");
         return sb.toString();

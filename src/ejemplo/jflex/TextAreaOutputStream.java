@@ -4,7 +4,6 @@
  */
 package ejemplo.jflex;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import javax.swing.JTextArea;
 
 public class TextAreaOutputStream extends OutputStream {

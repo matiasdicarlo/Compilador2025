@@ -21,7 +21,7 @@ public class Longitud extends Expresion {
         // Si el array es un identificador, consultamos la tabla directamente
         if (array instanceof Identificador) {
             Identificador id = (Identificador) array;
-            Object contenido = tabla.getLongitud(id.getEtiqueta());
+            Object contenido = tabla.getLongitud(id.getNombre());
                  
             if (contenido instanceof Integer) {
                 return contenido;

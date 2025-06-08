@@ -15,7 +15,7 @@ public class Distinto extends OperacionBinaria {
     }
     
     @Override
-    protected String getNombreOperacion() {
+    public String getNombreOperacion() {
         return "!=";
     }
     

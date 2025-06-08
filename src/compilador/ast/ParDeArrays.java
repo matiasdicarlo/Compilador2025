@@ -33,7 +33,7 @@ public class ParDeArrays extends Nodo{
             Constante cte = (Constante) valores;
             return new Identificador("_valores_"+str);    
         }     
-        else{ return new Identificador(valores.getEtiqueta());}
+        else{ return new Identificador(valores.getNombre());}
     }
     
     //Cuando son dos LIT_ARRAY
@@ -41,7 +41,7 @@ public class ParDeArrays extends Nodo{
         if (pesos instanceof Constante) {
             Constante cte = (Constante) pesos;
             return new Identificador("_pesos_"+str);
-        }else{ return new Identificador(pesos.getEtiqueta());}
+        }else{ return new Identificador(pesos.getNombre());}
     
     }
      @Override

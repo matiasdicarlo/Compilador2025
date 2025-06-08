@@ -15,12 +15,12 @@ public class OperacionAnd extends OperacionBinaria{
     }
     
     @Override
-    protected String getNombreOperacion() {
+    public String getNombreOperacion() {
         return "AND";
     }
     
     @Override
-    protected String operadorLLVM(String tipo) {
+    public String operadorLLVM(String tipo) {
         return "and"; 
     }
 
@@ -28,5 +28,16 @@ public class OperacionAnd extends OperacionBinaria{
     public String getTipo() {
         return "bool";
     }
+    
+    @Override
+    public void generarCodigoCondicionalLLVM(ContextoLLVM ctx, String etiquetaThen, String etiquetaElse, StringBuilder sb) {
+        String etiquetaIntermedia = ctx.nuevaEtiqueta("and_rhs");
+        // Si izquierda es true, evaluar derecha
+        this.getIzquierda().generarCodigoCondicionalLLVM(ctx, etiquetaIntermedia, etiquetaElse, sb);
+        // Derecha decide entre then o else
+        sb.append(etiquetaIntermedia).append(":\n");
+        this.getDerecha().generarCodigoCondicionalLLVM(ctx, etiquetaThen, etiquetaElse, sb);
+    }
+
     
 }

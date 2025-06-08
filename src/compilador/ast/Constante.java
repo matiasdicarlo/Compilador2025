@@ -30,11 +30,11 @@ public class Constante extends Expresion {
     
     @Override
     public String getEtiqueta() {
-        return String.format(String.format("LIT %s", getValor()));
+        return String.format(String.format("Constante "+ getTipo() +" : %s", getValor()));
     }
     
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         return super.graficar(idPadre);
     }
         
@@ -44,8 +44,7 @@ public class Constante extends Expresion {
 
         if (tipo.equals("float_array")) {
             String nombreTemp = ctx.nuevoTemporal().substring(1);
-            nombreTemporalLLVM = nombreTemp;  // GUARDAMOS el nombre para otras referencias
-
+            nombreTemporalLLVM = nombreTemp; 
             String arrayStr = valor.toString().trim();
             arrayStr = arrayStr.substring(1, arrayStr.length() - 1);
             String[] elementos = arrayStr.split(",");

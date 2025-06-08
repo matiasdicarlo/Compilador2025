@@ -21,7 +21,7 @@ public class Negativo extends Expresion {
     }
     
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         final String miId = this.getId();
         return super.graficar(idPadre) +
                 operando.graficar(miId);
@@ -47,8 +47,6 @@ public class Negativo extends Expresion {
     public Expresion getOperando() {
         return operando;
     }
-
-    
     
     @Override
     public String getTipo() {

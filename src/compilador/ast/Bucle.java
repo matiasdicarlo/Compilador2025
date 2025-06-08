@@ -4,8 +4,6 @@
  */
 package compilador.ast;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,46 +34,43 @@ public class Bucle extends Nodo{
         if (idPadre != null) {
             sb.append(idPadre).append(" -- ").append(miId).append(";\n");
         }
-
         // Condición
         sb.append(condicion.graficar(miId));
-
         // THEN (cuerpo del bucle)
         String cuerpoId = "loop_" + getId();
         sb.append(cuerpoId).append("[label=\"WHEN\"];\n");
         sb.append(miId).append(" -- ").append(cuerpoId).append(";\n");
-        
         for (Nodo nodo : cuerpo) {
             sb.append(nodo.graficar(cuerpoId));
         }
-
         return sb.toString();
     }
     
-   @Override
+    @Override
     public String generarCodigoLLVM(ContextoLLVM ctx) {
         String etiquetaInicio = ctx.nuevaEtiqueta("loop");
         String etiquetaCond = ctx.nuevaEtiqueta("cond");
-        String etiquetaFin = ctx.nuevaEtiqueta("fin");     
+        String etiquetaFin = ctx.nuevaEtiqueta("fin");
         ctx.pushEtiquetaBreak(etiquetaFin);
         ctx.pushEtiquetaContinue(etiquetaCond);
         StringBuilder sb = new StringBuilder();
+        // Salto inicial al chequeo de la condición
         sb.append("br label %").append(etiquetaCond).append("\n");
         sb.append(etiquetaCond).append(":\n");
-        String condCode = condicion.generarCodigoLLVM(ctx);
-        String condTmp = extraerUltimaTemporal(condCode);
-        sb.append(condCode).append("\n");
-        sb.append("br i1 ").append(condTmp).append(", label %")
-            .append(etiquetaInicio).append(", label %").append(etiquetaFin).append("\n");
+        // Generar salto según el resultado de la condición 
+        condicion.generarCodigoCondicionalLLVM(ctx, etiquetaInicio, etiquetaFin, sb);
+        // Etiqueta del cuerpo del bucle
         sb.append(etiquetaInicio).append(":\n");
         for (Nodo n : cuerpo) {
             sb.append(n.generarCodigoLLVM(ctx)).append("\n");
         }
+        // Salto al chequeo de condición nuevamente
         sb.append("br label %").append(etiquetaCond).append("\n");
+      
         sb.append(etiquetaFin).append(":\n");
         ctx.popEtiquetaBreak();
         ctx.popEtiquetaContinue();
-        return sb.toString();
+     return sb.toString();
     }
     
     private String extraerUltimaTemporal(String codigo) {

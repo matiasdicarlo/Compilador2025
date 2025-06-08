@@ -34,7 +34,6 @@ public class Asignacion extends Nodo {
     }
     
     
-    
     @Override
     public String graficar(String idPadre) {
         String miId = getId();
@@ -43,58 +42,73 @@ public class Asignacion extends Nodo {
             expresion.graficar(miId);
     }
     
-@Override
-public String generarCodigoLLVM(ContextoLLVM ctx) {
-    String nombre = identificador.getEtiqueta();
-    String tipoFuente = SymbolTable.getTipo(nombre); // "integer", "float", "bool"
-    String tipoLLVM = convertirATipoLLVM(tipoFuente);  // i32, double, i1
+    @Override
+    public String generarCodigoLLVM(ContextoLLVM ctx) {
+        String nombre = identificador.getNombre();
+        String tipoFuente = SymbolTable.getTipo(nombre); // "integer", "float", "bool", "float_array"
+        String tipoLLVM = convertirATipoLLVM(tipoFuente);  // i32, double, i1
+        if (expresion.getTipo().equals("float_array") && !(expresion instanceof InputArray)) {
+            return generarAsignacionDesdeArrayLiteral(ctx, nombre);
+        }
+        if (tipoFuente.startsWith("float_array") && expresion instanceof Identificador) {
+            return generarAsignacionDesdeIdentificadorArray(ctx, nombre, (Identificador) expresion);
+        }
+        if (expresion instanceof InputArray) {
+            return generarAsignacionDesdeInputArray(ctx, nombre, (InputArray) expresion);
+        }
+        return generarAsignacionComun(ctx, nombre, tipoFuente, tipoLLVM);
+    }
 
-    if (expresion.getTipo().equals("float_array")) {
-        // Generar código del array literal
+    
+    private String generarAsignacionDesdeArrayLiteral(ContextoLLVM ctx, String nombreDestino) {
         String codigoLiteral = expresion.generarCodigoLLVM(ctx);
         String nombreLiteral = ((Constante) expresion).getReferenciaLLVM();
         int tamaño = ((Constante) expresion).getTamanioArray();
-        String nombreDestino = "%" + identificador.getNombre();
+        String destino = "%" + nombreDestino;
+        return codigoLiteral + "\n" + generarCopiaDeArray(ctx, nombreLiteral, destino, tamaño);
+    }
 
+    private String generarAsignacionDesdeInputArray(ContextoLLVM ctx, String nombreDestino, InputArray inputArray) {
+        int tamaño = inputArray.getLongitud();
+        String codigoInput = inputArray.generarCodigoLLVM(ctx);
+        String nombreFuente = inputArray.getUltimaReferencia();
+        String destino = "%" + nombreDestino;
+        return codigoInput + "\n" + generarCopiaDeArray(ctx, nombreFuente, destino, tamaño);
+    }
+
+    private String generarAsignacionDesdeIdentificadorArray(ContextoLLVM ctx, String nombreDestino, Identificador fuente) {
+        int tamaño = SymbolTable.getIndice(nombreDestino);  
+        String nombreFuente = "%" + fuente.getNombre();
+        String destino = "%" + nombreDestino;
+        return generarCopiaDeArray(ctx, nombreFuente, destino, tamaño);
+    }
+
+    private String generarAsignacionComun(ContextoLLVM ctx, String nombre, String tipoFuente, String tipoLLVM) {
+        String codigoExp = expresion.generarCodigoLLVM(ctx);
+        String valor = extraerUltimaTemporal(codigoExp);
+        return codigoExp + "\nstore " + tipoLLVM + " " + valor + ", " + tipoLLVM + "* %" + nombre;
+    }
+
+    private String generarCopiaDeArray(ContextoLLVM ctx, String fuente, String destino, int tamaño) {
         StringBuilder copia = new StringBuilder();
         for (int i = 0; i < tamaño; i++) {
             String ptrSrc = ctx.nuevoTemporal();
             String val = ctx.nuevoTemporal();
             String ptrDst = ctx.nuevoTemporal();
-
             copia.append(ptrSrc).append(" = getelementptr inbounds [")
-                .append(tamaño).append(" x double], [").append(tamaño)
-                .append(" x double]* ").append(nombreLiteral)
-                .append(", i32 0, i32 ").append(i).append("\n");
-
+             .append(tamaño).append(" x double], [").append(tamaño)
+             .append(" x double]* ").append(fuente)
+             .append(", i32 0, i32 ").append(i).append("\n");
             copia.append(val).append(" = load double, double* ").append(ptrSrc).append("\n");
-
             copia.append(ptrDst).append(" = getelementptr inbounds [")
-                .append(tamaño).append(" x double], [").append(tamaño)
-                .append(" x double]* ").append(nombreDestino)
-                .append(", i32 0, i32 ").append(i).append("\n");
-
+             .append(tamaño).append(" x double], [").append(tamaño)
+             .append(" x double]* ").append(destino)
+             .append(", i32 0, i32 ").append(i).append("\n");
             copia.append("store double ").append(val).append(", double* ").append(ptrDst).append("\n");
         }
-
-        return codigoLiteral + "\n" + copia.toString();
+        return copia.toString();
     }
-
-    // Caso común
-    String codigoARetornar="";
-    String codigoExp = expresion.generarCodigoLLVM(ctx);
-    String valor = extraerUltimaTemporal(codigoExp);
-    if (tipoFuente=="float" && expresion.getTipo()=="integer"){
-        String convertido = ctx.nuevoTemporal();
-        codigoExp += "\n" + convertido + " = sitofp i32 " + valor + " to double";
-        String valorConversion = extraerUltimaTemporal(codigoExp);
-        codigoARetornar=codigoExp + "\nstore " + tipoLLVM + " " + valorConversion + ", " + tipoLLVM + "* %" + nombre;
-        return codigoARetornar;
-            }
-    codigoARetornar=codigoExp + "\nstore " + tipoLLVM + " " + valor + ", " + tipoLLVM + "* %" + nombre;   
-    return codigoARetornar;
-}
-
+    
     private String convertirATipoLLVM(String tipoFuente) {
         switch (tipoFuente) {
             case "integer": return "i32";
@@ -111,5 +125,8 @@ public String generarCodigoLLVM(ContextoLLVM ctx) {
         }
         return "";
     }
+    
+    
+    
 
 }

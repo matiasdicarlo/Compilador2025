@@ -1,4 +1,103 @@
 
+$Prueba Operaciones Varias
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado, prom
+   float_array[5] : mi_arreglo
+   boolean : es_igual, mayor, resultado_all
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   a := 5
+   b := 3
+   c := 10
+   x := 20.5
+   y := -3.2
+   mi_arreglo[0] := x + y
+   
+   DISPLAY("Valor de la variable a:")
+   DISPLAY(a)
+   DISPLAY("Valor de la variable b:")
+   DISPLAY(b)
+   DISPLAY("Valor de la variable c:")
+   DISPLAY(c)
+   DISPLAY("Valor de la variable x:")
+   DISPLAY(x)
+   DISPLAY("Valor de la variable y:")
+   DISPLAY(y)
+
+   resultado := (a + b * c) / x
+   DISPLAY("Valor de la variable resultado:")
+   DISPLAY(resultado)  
+   a := a + 1
+   DISPLAY("Valor de la variable a+1:")
+   DISPLAY(a)
+
+   DISPLAY("Valor de la variable mi_arreglo[0]:")
+   DISPLAY(mi_arreglo[0])
+   
+   es_igual := resultado == 10
+   CONDITION(es_igual==true)THEN
+            DISPLAY("La variable resultado es igual a 10")
+   ELSE
+            DISPLAY("La variable resultado NO es igual a 10")  
+   END
+          
+   mayor := x > y and not es_igual
+   CONDITION(mayor==true)THEN
+            DISPLAY("Display desde CONDITION, x>y")
+   END
+
+   LOOP WHEN(a<8)THEN
+        DISPLAY("ITERANDO EN LOOP WHEN")
+        a:=a+1
+   END_LOOP
+   
+    resultado_all:= all(>, 5.8, [10.0, 9.2, 6.2])
+    CONDITION (resultado_all == true)THEN
+        DISPLAY("FUNCION ALL, todos los elementos son mayores que 5.8:")
+    END
+  
+   prom := promedio_ponderado([10.5, 20.4, 30.4], [0.2, 0.3, 0.5])
+   DISPLAY("El resultado del Promedio ponderado entre [10.5, 20.4, 30.4], [0.2, 0.3, 0.5] es: ") 
+   DISPLAY(prom)
+
+  
+    
+
+ENDPROGRAM.SECTION
+
+(*Resultado esperado:
+Valor de la variable a:
+5
+Valor de la variable b:
+3
+Valor de la variable c:
+10
+Valor de la variable x:
+20.500000
+Valor de la variable y:
+-3.200000
+Valor de la variable resultado:
+1.707317
+Valor de la variable a+1:
+6
+Valor de la variable mi_arreglo[0]:
+17.300000
+La variable resultado NO es igual a 10
+Display desde CONDITION, x>y
+ITERANDO EN LOOP WHEN
+ITERANDO EN LOOP WHEN
+FUNCION ALL, todos los elementos son mayores que 5.8:
+El resultado del Promedio ponderado entre [10.5, 20.4, 30.4], [0.2, 0.3, 0.5] es:
+23.420000
+*)
+
+----------------------------------------
+
 $Prueba Operaciones Aritmeticas y Relacionales
 
 DECLARE.SECTION
@@ -513,4 +612,92 @@ El resultado de a+b+c con c desde input_int es:
 9.000000 *)
 
 -----------------------------------------------
+
+
+$Prueba instruccion INPUT_FLOAT
+
+DECLARE.SECTION
+   integer : a, b, c
+   float : x, y, resultado
+ENDDECLARE.SECTION
+
+
+PROGRAM.SECTION
+   (* Declaraciones iniciales *)
+   y := 3.2
+   
+   DISPLAY("Ingrese el valor de x desde input_float: ")
+   x:=INPUT_INT()
+   resultado:= y+x
+   DISPLAY("El resultado de y+x con x desde INPUT_FLOAT es: ")
+   DISPLAY(resultado)
+  
+
+ENDPROGRAM.SECTION
+
+(*Resultado Esperado:
+Ingrese el valor de x desde input_float:
+5.2
+El resultado de y+x con x desde INPUT_FLOAT es:
+8.200000 *)
+
+-------------------------------------------------------
+
+
+$Prueba instruccion INPUT_BOOL
+
+DECLARE.SECTION
+    boolean: entrada_booleana
+
+ENDDECLARE.SECTION
+   
+PROGRAM.SECTION
+   
+    DISPLAY("Ingrese la entrada booleana 1 para TRUE o 0 para FALSE: ")
+    entrada_booleana:= INPUT_BOOL()
+    CONDITION(entrada_booleana==true) THEN
+         DISPLAY("La entrada fue True")
+    ELSE
+          DISPLAY("La entrada fue False")
+    END
+
+ENDPROGRAM.SECTION
+
+(*Resultado esperado:
+Ingrese la entrada booleana 1 para TRUE o 0 para FALSE:
+Ingresando un 1
+La entrada fue True*)
+
+-------------------------------------------------------
+
+$Prueba instruccion INPUT_ARRAY
+
+DECLARE.SECTION
+   float_array[2]: arreglo_entrada
+
+ENDDECLARE.SECTION
+   
+PROGRAM.SECTION
+   
+    DISPLAY("Ingrese la entrada a cargar como primer elemento del array: ")
+    arreglo_entrada[0]:= INPUT_ARRAY()
+    DISPLAY("Ingrese la entrada a cargar como sengudo elemento del array: ")
+    arreglo_entrada[1]:= INPUT_ARRAY()
+    DISPLAY("Primer elemento del array:")
+    DISPLAY(arreglo_entrada[0])
+    DISPLAY("Segundo elemento del array:")
+    DISPLAY(arreglo_entrada[1])
+
+ENDPROGRAM.SECTION
+
+(*Resultado Esperado:
+Ingrese la entrada a cargar como primer elemento del array:
+ingresando 2.0
+Ingrese la entrada a cargar como sengudo elemento del array:
+ingresando 5.2
+Primer elemento del array:
+2.000000
+Segundo elemento del array:
+5.200000 *)
+
 

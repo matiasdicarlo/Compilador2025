@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package compilador.ast;
-
+import ejemplo.jflex.SymbolTable;
 /**
  *
  * @author Usuario
@@ -20,7 +20,7 @@ public class AccesoArray extends Expresion {
         this.indiceIden = null;
         
     }
-    public AccesoArray(Identificador arreglo,Identificador indice) {
+    public AccesoArray(Identificador arreglo, Identificador indice) {
         this.arreglo = arreglo;
         this.indiceIden = indice;
         this.indice = null;
@@ -29,20 +29,19 @@ public class AccesoArray extends Expresion {
     
     @Override
     public String getEtiqueta() {
-        return "FloatArray[]";
+        if (indice instanceof Constante){
+        String etiqueta= arreglo.getNombre()+"["+indice.getValor()+"]";
+            return etiqueta;
+        }else {
+            return arreglo.getNombre()+"["+indiceIden.getNombre()+"]";}
     }
     
     @Override
-    protected String graficar(String idPadre) {
+    public String graficar(String idPadre) {
         final String miId = this.getId();
-        if(indice!=null){
-        return super.graficar(idPadre)
-            + arreglo.graficar(miId)
-            + indice.graficar(miId);}
-        else {
-         return super.graficar(idPadre)
-            + arreglo.graficar(miId)
-            + indiceIden.graficar(miId);}
+        
+        return super.graficar(idPadre);
+       
         
     }
     
@@ -60,8 +59,11 @@ public class AccesoArray extends Expresion {
         String tmpVal = ctx.nuevoTemporal();
         String nombre = arreglo.getNombre(); 
 
+      
+        int longitud =SymbolTable.getIndice(arreglo.getNombre());
+        
         sb.append(indiceCode).append("\n");
-        sb.append(tmpPtr).append(" = getelementptr inbounds [100 x double], [100 x double]* %")
+        sb.append(tmpPtr).append(" = getelementptr inbounds ["+longitud+" x double], ["+longitud+"x double]* %")
         .append(nombre).append(", i32 0, i32 ").append(tmpIndice).append("\n");
 
         sb.append(tmpVal).append(" = load double, double* ").append(tmpPtr);
