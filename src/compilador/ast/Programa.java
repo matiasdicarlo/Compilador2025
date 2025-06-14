@@ -68,10 +68,10 @@ public class Programa extends Nodo {
         sb.append("define i32 @main() {\n");
       
         for (Nodo dec : declaraciones) {
-            sb.append("  ").append(dec.generarCodigoLLVM(ctx)).append("\n");
+            sb.append("").append(dec.generarCodigoLLVM(ctx)).append("\n");
         }
         for (Nodo stmt : instrucciones) {
-            sb.append("  ").append(stmt.generarCodigoLLVM(ctx)).append("\n");
+            sb.append("").append(stmt.generarCodigoLLVM(ctx)).append("\n");
         }
         sb.append("  ret i32 0\n");
         sb.append("}\n");

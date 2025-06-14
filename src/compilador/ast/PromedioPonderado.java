@@ -15,7 +15,6 @@ import java.util.List;
 public class PromedioPonderado {
     
     public static Identificador crearPPComoAST(int str, List<Nodo> declaracionesPP, List<Nodo> instruccionesPP, SymbolTable tablaSimbolos, ParDeArrays la) {
- 
                     //Generar declaraciones unicas
                     List<Nodo> nodos=new ArrayList<>();
                     nodos.add(new DeclaracionVariable("float","_suma_valores_"+str));
@@ -39,9 +38,9 @@ public class PromedioPonderado {
                     // _i = 0
                     instruccionesPP.add(new Asignacion(varI, new Constante(0)));
                     // _suma_valores = 0
-                    instruccionesPP.add(new Asignacion(varN, new Constante(0)));
+                    instruccionesPP.add(new Asignacion(varN, new Constante(0.0)));
                     // _suma_pesos = 0
-                    instruccionesPP.add(new Asignacion(varD, new Constante(0)));
+                    instruccionesPP.add(new Asignacion(varD, new Constante(0.0)));
 
                     Expresion arrayValores = la.getValores();
                     Expresion arrayPesos = la.getPesos();
@@ -51,7 +50,7 @@ public class PromedioPonderado {
                     List<Nodo> instruccionVerificacion= new ArrayList<>();
                     Identificador respuesta= new Identificador("_resultado_"+str);
                     Constante constante= new Constante(0.0);
-                    Display displayDif= new Display(new Constante("Las listas deben tener la misma longitud"));
+                    Display displayDif= new Display(new Constante("ERROR PP: Las listas deben tener la misma longitud"));
                     instruccionVerificacion.add(displayDif);
                     instruccionVerificacion.add(new Asignacion (respuesta, constante));
                     List<Nodo> instruccionElse= new ArrayList<>();
@@ -107,22 +106,15 @@ public class PromedioPonderado {
                     instruccionElse.add(new Bucle(condicion, cuerpo));
                     
                     //_suma_pesos == 1?
-                    Expresion condicionIgualUno = new Distinto(new Identificador (varD.getNombre()), new Constante (1));
-                    Expresion condicioneslIgualCero= new Igual(new Identificador (varD.getNombre()), new Constante (0));
-                    Expresion operacionOr= new OperacionOr(condicionIgualUno,condicioneslIgualCero);
+                    Expresion condicionIgualUno = new Igual(new Identificador (varD.getNombre()), new Constante (1.0));
                     List<Nodo> instruccionesVerifIgualUno= new ArrayList<>();
+                    instruccionesVerifIgualUno.add(new Asignacion(new Identificador(resultado.getNombre()), new OperacionDivision(new Identificador(varN.getNombre()), new Identificador(varD.getNombre()))));
+                    List<Nodo> instruccionElseIgualUno= new ArrayList<>();
                     Identificador respuestaIgualUno= new Identificador("_resultado_"+str);
                     Constante constanteIgualUno= new Constante(0.0);
-                    Display display= new Display(new Constante("La suma de los pesos debe dar 1"));
-                    instruccionesVerifIgualUno.add(display);
-                    instruccionesVerifIgualUno.add(new Asignacion (respuestaIgualUno, constanteIgualUno));
-                    List<Nodo> instruccionElseIgualUno= new ArrayList<>();
-                    ConditionThenElse verificacionIgualUno= new ConditionThenElse(operacionOr, instruccionesVerifIgualUno, instruccionElseIgualUno);
-                     
-                    
-                    // _resultado = _suma_valores / _suma_pesos
-                    instruccionElseIgualUno.add(new Asignacion(new Identificador(resultado.getNombre()), new OperacionDivision(new Identificador(varN.getNombre()), new Identificador(varD.getNombre()))));
-                    
+                    instruccionElseIgualUno.add(new Asignacion (respuestaIgualUno, constanteIgualUno));
+                    ConditionThenElse verificacionIgualUno= new ConditionThenElse(condicionIgualUno, instruccionesVerifIgualUno, instruccionElseIgualUno);
+                                     
                     //se agregan ambas verificaciones
                     instruccionesPP.add(verificacion);
                     instruccionesPP.add(verificacionIgualUno);

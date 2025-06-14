@@ -57,10 +57,8 @@ public class ValidarTipos {
         if (!tipoArreglo.startsWith("float_array")) {
             throw new Error("Error: '" + nombreArreglo + "' no es un arreglo.");
         }
-        // Validar índice: debe ser Constante o una OperacionBinaria válida
-        if (indice instanceof OperacionBinaria) {
-            ValidarTipos.validarOperacionBinaria((OperacionBinaria) indice);
-        } else if (!(indice instanceof Constante)) {
+        // Validar índice: debe ser Constante 
+        if (!(indice instanceof Constante)) {
             throw new Error("Error: solo se pueden usar Integer como índices.");
         }
         // Si es constante, validar que sea de tipo entero y que el índice esté dentro del rango

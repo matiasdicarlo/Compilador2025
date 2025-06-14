@@ -88,7 +88,19 @@ programa ::= DECLARE_SECTION declaraciones:d ENDDECLARE_SECTION
                 RESULT = prog; 
                 tablaSimbolos.mostrarTablaEnGUI();
                
-             :};
+             :}
+              | DECLARE_SECTION declaraciones:d ENDDECLARE_SECTION 
+              PROGRAM_SECTION /*vacio*/ ENDPROGRAM_SECTION
+              {:
+                System.out.println("REGLA 1: programa -> DECLARE_SECTION declaraciones ENDDECLARE_SECTION  PROGRAM_SECTION  ENDPROGRAM_SECTION");
+                if(!declaracionesPP.isEmpty()){d.addAll(declaracionesPP);declaracionesPP.clear();}
+                if(!declaracionesAll.isEmpty()){d.addAll(declaracionesAll);declaracionesAll.clear();}
+                if(!declaracionesAny.isEmpty()){d.addAll(declaracionesAny);declaracionesAny.clear();}
+                List<Nodo> inst_vacio = new ArrayList<>();
+                Programa prog= new Programa(d,inst_vacio ); 
+                RESULT = prog; 
+                tablaSimbolos.mostrarTablaEnGUI();  :};
+
 
 declaraciones ::= declaracion:d declaraciones:ds 
                 {:  System.out.println("REGLA 2: declaraciones -> declaracion declaraciones"); 

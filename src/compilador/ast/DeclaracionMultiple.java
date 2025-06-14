@@ -37,7 +37,7 @@ public class DeclaracionMultiple extends Nodo {
     public String generarCodigoLLVM(ContextoLLVM ctx) {
         StringBuilder sb = new StringBuilder();
         for (Nodo dec : declaraciones) {
-            sb.append(dec.generarCodigoLLVM(ctx)).append("\n");
+            sb.append(dec.generarCodigoLLVM(ctx)).append("");
         }
         return sb.toString();
     }

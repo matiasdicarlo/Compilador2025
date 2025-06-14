@@ -17,10 +17,8 @@ import java.util.List;
 public class All  {
     
    public static Identificador crearAllComoAST(int str, String operador, Expresion valorComparacion, String arreglo, List<Nodo> declaraciones, List<Nodo> instruccionesAll, SymbolTable table) {
-    // Variables auxiliares
-     
-        Identificador varI = new Identificador("_iAll_"+str);
-        
+        // Variables auxiliares     
+        Identificador varI = new Identificador("_iAll_"+str);        
         List<Nodo> nodosBool= new ArrayList();
         nodosBool.add(new DeclaracionVariable("bool","_condicionLocalAll_"+str));
         nodosBool.add(new DeclaracionVariable("bool","_resultadoAll_"+str));
@@ -34,23 +32,22 @@ public class All  {
         Identificador varLongitud = new Identificador("_longitudAll_"+str);
         Identificador varCond = new Identificador("_condicionLocalAll_"+str);
         Identificador varRes = new Identificador("_resultadoAll_"+str);
-
-        // 1. i := 0
+        //i := 0
         List<Nodo> instrucciones = new ArrayList();
         Asignacion inicializarI = new Asignacion(varI, new Constante(0));
         instrucciones.add(inicializarI);
 
-        // 2. longitud := longitud(arreglo)
+        //longitud := longitud(arreglo)
         Object longtipo1 = table.getLongitud(arreglo); 
         Constante longitud=new Constante(longtipo1);
         Asignacion inicializarLongitud = new Asignacion(varLongitud, longitud);
         instrucciones.add(inicializarLongitud);
 
-        // 3. res := true
+        //res := true
         Asignacion inicializarRes = new Asignacion(varRes, new Constante(true));
         instrucciones.add(inicializarRes);
         
-        // 4. condicionLocal := arreglo[i] OP valorComparacion
+        //condicionLocal := arreglo[i] OP valorComparacion
         Identificador idArreglo= new Identificador(arreglo);
         Identificador indice= new Identificador(varI.getNombre().toString());
         Expresion accesoElemento = new AccesoArray(idArreglo, indice);
@@ -65,9 +62,8 @@ public class All  {
             default: throw new RuntimeException("Operador no soportado: " + operador);
         }
         Asignacion asignarCond = new Asignacion(varCond, comparacion);
-        
-        
-        // 5. IF condicionLocal == false THEN { res := false; BREAK }
+         
+        //IF condicionLocal == false THEN { res := false; BREAK }
         Identificador res=new Identificador("_resultadoAll_"+str);
         Identificador condicionLocal= new Identificador(varCond.getNombre().toString());
         Expresion condNegada = new Igual(condicionLocal, new Constante(false));
@@ -76,21 +72,20 @@ public class All  {
                 new Break()
         ));
         ConditionThenElse condicionCorte = new ConditionThenElse(condNegada, cuerpoThen, null);
-        
-        
-        // 6. i := i + 1
+       
+        //i := i + 1
         Identificador indiceRectificado= new Identificador(varI.getNombre().toString());
         Identificador indiceSumado= new Identificador(varI.getNombre().toString());
         Asignacion incremento = new Asignacion(indiceRectificado, new OperacionSuma(indiceSumado, new Constante(1)));
         
-        // 7. BUCLE
+        //BUCLE
         Identificador varLongitudBucle= new Identificador(varLongitud.getNombre().toString());
         Identificador varIndiceBucle= new Identificador(varI.getNombre().toString());
         Expresion condicionBucle = new Menor(varIndiceBucle, varLongitudBucle);
         List<Nodo> cuerpoBucle = Collections.unmodifiableList(Arrays.asList(asignarCond, condicionCorte, incremento));
         Bucle bucle = new Bucle(condicionBucle, cuerpoBucle);
         instrucciones.add(bucle);
-        // 8. Retornar todo 
+        //Retornar todo 
         declaraciones.add(new DeclaracionMultiple(nodosEnteros));
         declaraciones.add(new DeclaracionMultiple(nodosBool));
         instruccionesAll.addAll(instrucciones);
@@ -100,24 +95,23 @@ public class All  {
     }
    
     public static Identificador crearAllLiteralComoAST(int str, String operador, Expresion valorComparacion, Constante literalArray, List<Nodo> declaraciones, List<Nodo> instruccionesAll, SymbolTable table) {
-        // 1. Nombre del array auxiliar
+        // Nombre del array auxiliar
         String nombreArrayAux = "_arrayAll_" + (str + 1);
-
-        // 2. Obtener tamaño del array literal
+        // Obtener tamaño del array literal
         Object valor = literalArray.getValor();
         if (!(valor instanceof String)) {
             throw new RuntimeException("El valor del literal array debe ser un String");
         }
         int tamanio = contarElementosArrayLiteral((String) valor);
-        // 3. Declarar el array con tamaño fijo
+        //Declarar el array con tamaño fijo
         table.add(nombreArrayAux, "float_array"+"["+tamanio+"]");
         List<Nodo> declaracionesAuxiliares= new ArrayList();
         declaracionesAuxiliares.add(new DeclaracionArray("float_array", nombreArrayAux, tamanio));
         declaraciones.add(new DeclaracionMultiple(declaracionesAuxiliares));
-        // 4. Asignar el literal array al identificador
+        //Asignar el literal array al identificador
         Asignacion asignarArray = new Asignacion(new Identificador(nombreArrayAux), literalArray);
         instruccionesAll.add(asignarArray);
-        // 5. Usar método original para construir el resto del AST
+        //Usar método original para construir el resto del AST
         return crearAllComoAST(str, operador, valorComparacion, nombreArrayAux, declaraciones, instruccionesAll, table);
     }
 
