@@ -65,6 +65,7 @@ ________________
 ├── MenorIgual.java
 ├── Negativo.java
 ├── Nodo.java
+├── NodoConversion.java
 ├── OperacionAnd.java
 ├── OperacionBinaria.java
 ├── OperacionDivision.java
